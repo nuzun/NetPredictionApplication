@@ -1,0 +1,17 @@
+// "afp_P02771.fasta", "afp_hits.fasta"
+//"glypican_Q8IYG2.fasta","glypican_hits.fasta"
+//"mega1_P43355.fasta","mega1_hits.fasta
+//"mega3_P43357.fasta","mega3_hits.fasta"
+//"mega4_P43358.fasta","mega4_hits.fasta"
+//"nyeso_P78358.fasta","nyseo_hits.fasta"
+//"p53_P04637.fasta","p53_hits.fasta"
+//"survivin_O15392.fasta","survivin_hits.fasta"
+
+//HBsAg_P03141_A2.fasta
+//HBcAg_P03148_A2.fasta
+//HBeAg_P0C625.fasta
+//HBP_P03159.fasta
+//HBX_P69713.fasta
+
+
+		
