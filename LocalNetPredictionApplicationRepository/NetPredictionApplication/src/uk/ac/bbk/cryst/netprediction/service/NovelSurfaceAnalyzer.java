@@ -5,6 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,6 +66,12 @@ public class NovelSurfaceAnalyzer {
 	String variantOutputFullPathMHCIIPan;
 	String endogenousOutputFullPathMHCIIPan;
 	String proteomeOutputFullPathMHCIIPan;
+
+	String novelSurfacesFileFullPath;
+
+	public String getNovelSurfacesFileFullPath() {
+		return novelSurfacesFileFullPath;
+	}
 
 	public String getMutationFileFullPath() {
 		return mutationFileFullPath;
@@ -186,6 +196,8 @@ public class NovelSurfaceAnalyzer {
 		mutationFileFullPath = properties.getValue("mutationFileFullPath");
 		File mutationFile = new File(mutationFileFullPath);
 		readMutationFile(mutationFile);
+
+		novelSurfacesFileFullPath = properties.getValue("novelSurfacesFileFullPath");
 	}
 
 	private void readMutationFile(File mutationFile) throws FileNotFoundException {
@@ -218,8 +230,6 @@ public class NovelSurfaceAnalyzer {
 		for (String allele : groupData.getAlleleMap().keySet()) {
 			variantOutputFileFullPath = this.getVariantOutputFullPathMHCIIPan()
 					+ FilenameUtils.removeExtension(this.getSequenceFileName()) + "_" + allele + ".txt";
-
-			System.out.println(variantOutputFileFullPath);
 
 			File scoreFileToCreate = new File(variantOutputFileFullPath);
 			if (!scoreFileToCreate.exists()) {
@@ -258,7 +268,6 @@ public class NovelSurfaceAnalyzer {
 				endogeneousOutputFileFullPath = this.getEndogenousOutputFullPathMHCIIPan()
 						+ FilenameUtils.removeExtension(this.getSequenceFileName()) + "_" + allele + ".txt" + "_"
 						+ variantPosition + from + to;
-				System.out.println(endogeneousOutputFileFullPath);
 
 				File scoreFileToCreate = new File(endogeneousOutputFileFullPath);
 				if (!scoreFileToCreate.exists()) {
@@ -338,13 +347,16 @@ public class NovelSurfaceAnalyzer {
 					}
 				}
 
+				/*
+				 * helpful output
+				 */
 				System.out.println(variant);
+				System.out.println(allele);
 				for (MHCIIPeptideData p : remainingPeptides) {
 					System.out.println(p.toString());
 				}
 
 				// start proteome check:
-				System.out.println();
 				runProteomeCheck(allele, variant, remainingPeptides);
 			}
 		} // variant
@@ -418,12 +430,17 @@ public class NovelSurfaceAnalyzer {
 				}
 				NetPanData protNetPanData = builder.buildSingleFileData(new File(proteomeOutputFileFullPath));
 
-				// print the results
+				/*
+				 * helpful output
+				 */
 				System.out.println(ensemblPepSeq.getProteinId() + ":" + ensemblPepSeq.getGeneSymbol() + ":"
 						+ ensemblPepSeq.getDescription());
 				System.out.println("------------------------------------------------------");
+
 				/*
-				 * if (StringUtils.isNotEmpty(ensemblPepSeq.getGeneSymbol()) &&
+				 * 
+				 * /**************** if
+				 * (StringUtils.isNotEmpty(ensemblPepSeq.getGeneSymbol()) &&
 				 * ensemblPepSeq.getGeneSymbol().equals("F8")) { for
 				 * (MHCIIPeptideData pep :
 				 * protNetPanData.getSpecificPeptideDataByMaskedCore(
@@ -449,8 +466,10 @@ public class NovelSurfaceAnalyzer {
 				 * getSpecificPeptideDataByMaskedCore(
 				 * remaining.getCorePeptide(), this.getAnchorPositions(),
 				 * isMatch)); }
+				 *********************
 				 */
 
+				/* helpful output*/
 				if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
 						&& (ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")
 								|| ensemblPepSeq.getProteinId().startsWith("ENSP00000471364"))) {
@@ -465,7 +484,6 @@ public class NovelSurfaceAnalyzer {
 					}
 				}
 				System.out.println("------------------------------------------------------");
-				//
 
 				// pass the variant position as the panning position to ignore
 				// the peptides in that section for F8
@@ -485,18 +503,22 @@ public class NovelSurfaceAnalyzer {
 			tempMap.put(remaining.getCorePeptide(), bestMatch);
 		}
 
+		/*
+		 * helpful output
+		 */
 		System.out.println("-------------------------PRINTING MATCH MAP-----------------------------");
 		for (MHCIIPeptideData key : matchMap.keySet()) {
 			System.out.println("REMAINING=" + key.toString());
+
 			MHCIIPeptideData match = matchMap.get(key);
 			if (match != null) {
-				System.out.println("match=" + match.toString() + "\n");
+				System.out.println("MATCH=" + match.toString() + "\n");
 			} else {
 				System.out.println("NO MATCH");
 			}
 
 		}
-		System.out.println("-------------------------END MATCH MAP-----------------------------");
+		System.out.println("-------------------------END MATCH MAP----------------------------------");
 
 		int matchExists = 0;
 
@@ -524,20 +546,60 @@ public class NovelSurfaceAnalyzer {
 			novel.setColour("black");
 		} else {
 			if (pep2.getPeptide() == null && matchExists == 1) {
-				novel.setColour("pep1color/grey");
+				// novel.setColour("pep1color/grey");
+				novel.setColour((int) Math.ceil(pep1.getIC50Score()) + "/grey");
 			} else if (pep2.getPeptide() == null && matchExists == 0) {
-				novel.setColour("pep1color/pep1color");
+				// novel.setColour("pep1color/pep1color");
+				novel.setColour((int) Math.ceil(pep1.getIC50Score()) + "/" + (int) Math.ceil(pep1.getIC50Score()));
 			} else {
-				novel.setColour("pep1color/pep2color");
+				// novel.setColour("pep1color/pep2color");
+				novel.setColour((int) Math.ceil(pep1.getIC50Score()) + "/" + (int) Math.ceil(pep2.getIC50Score()));
 			}
 		}
 
-		System.out.println("PEP1:" + novel.getPeptide1() + "\n" + "PEP2:" + novel.getPeptide2() + "\n"
-				+ novel.getVariant() + "\n" + novel.getAllele() + "\n" + novel.getColour());
-		System.out.println(
-				"******************************************************************************************************");
+		/*
+		 * helpful output System.out.println("PEP1:" + novel.getPeptide1() +
+		 * "\n" + "PEP2:" + novel.getPeptide2() + "\n" + novel.getVariant() +
+		 * "\n" + novel.getAllele() + "\n" + novel.getColour());
+		 * System.out.println(
+		 * "******************************************************************************************************"
+		 * );
+		 */
+
 		FileUtils.cleanDirectory(new File(this.getTmpSequencePath()));
 
+		StringBuilder sb = new StringBuilder();
+		sb.append(novel.getVariant() + ",");
+		sb.append(novel.getAllele() + ",");
+		sb.append(((MHCIIPeptideData) novel.getPeptide1()).getPeptide() + ",");
+		sb.append(((MHCIIPeptideData) novel.getPeptide1()).getCorePeptide() + ",");
+		sb.append(((MHCIIPeptideData) novel.getPeptide1()).getIC50Score() + ",");
+		sb.append(((MHCIIPeptideData) novel.getPeptide2()).getPeptide() + ",");
+		sb.append(((MHCIIPeptideData) novel.getPeptide2()).getCorePeptide() + ",");
+		sb.append(((MHCIIPeptideData) novel.getPeptide2()).getIC50Score() + ",");
+		sb.append(novel.getColour());
+
+		writeToFinalOutputFile(sb.toString());
+		/* helpful output */
+		System.out.println("NOVEL:" + sb.toString());
+
+	}
+
+	private void writeToFinalOutputFile(String sb) throws IOException {
+		// TODO Auto-generated method stub
+		String header = "Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour";
+		String newLine = "\n";
+
+		File file = new File(this.getNovelSurfacesFileFullPath());
+		if (!file.exists()) {
+			Path path = Paths.get(this.getNovelSurfacesFileFullPath());
+			Files.write(path, header.getBytes());
+			Files.write(path, newLine.getBytes(), StandardOpenOption.APPEND);
+		}
+
+		Path path = Paths.get(this.getNovelSurfacesFileFullPath());
+		Files.write(path, sb.getBytes(), StandardOpenOption.APPEND);
+		Files.write(path, newLine.getBytes(), StandardOpenOption.APPEND);
 	}
 
 }

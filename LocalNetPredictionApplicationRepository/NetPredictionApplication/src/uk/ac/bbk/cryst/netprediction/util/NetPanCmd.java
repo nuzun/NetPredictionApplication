@@ -86,7 +86,7 @@ public class NetPanCmd {
 			 
 			shellIn.close();
 			
-			System.out.println("response: " + response);
+			//System.out.println("response: " + response);
 			
 		}
 		catch(Exception e){
