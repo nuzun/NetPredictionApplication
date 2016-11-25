@@ -73,6 +73,11 @@ public class MHCIIPeptideData extends PeptideData {
 				+ ", rankPercentage=" + rankPercentage + ", identity=" + identity + "]";
 	}
 	
+	public String toStringLessFields(){
+		return "MHCIIPeptideData [startPosition=" + startPosition + ", peptide=" + peptide
+				+ ", IC50Score=" + IC50Score + ", coreStartPosition=" + coreStartPosition + ", corePeptide=" + corePeptide
+				+  "]";
+	}
 
 	@Override
 	public String toStringNoHeader(String string) {

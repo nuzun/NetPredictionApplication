@@ -52,6 +52,13 @@ public class MHCIIPanPeptideData extends MHCIIPeptideData{
 				+ bindingLevel + ", epitope=" + epitope + ", identity=" + identity + ", coreRel=" + coreRel
 				+ ", expBind=" + expBind + "]";
 	}
+	
+	@Override
+	public String toStringLessFields() {
+		return "MHCIIPanPeptideData [startPosition=" + startPosition + ", peptide=" + peptide
+				+ ", coreStartPosition=" + coreStartPosition + ", corePeptide=" + corePeptide + ", IC50Score="
+				+ IC50Score + "]";
+	}
 
 	@Override
 	public String toStringNoHeader(String string) {

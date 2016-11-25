@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -27,6 +29,7 @@ import uk.ac.bbk.cryst.netprediction.model.MHCIIPeptideData;
 import uk.ac.bbk.cryst.netprediction.model.NetPanData;
 import uk.ac.bbk.cryst.netprediction.model.NovelPeptideSurface;
 import uk.ac.bbk.cryst.netprediction.model.PeptideData;
+import uk.ac.bbk.cryst.netprediction.util.CustomLogger;
 import uk.ac.bbk.cryst.netprediction.util.FileHelper;
 import uk.ac.bbk.cryst.netprediction.util.NetPanCmd;
 import uk.ac.bbk.cryst.netprediction.util.PeptideDataHelper;
@@ -68,7 +71,9 @@ public class NovelSurfaceAnalyzer {
 	String proteomeOutputFullPathMHCIIPan;
 
 	String novelSurfacesFileFullPath;
-
+	
+	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	
 	public String getNovelSurfacesFileFullPath() {
 		return novelSurfacesFileFullPath;
 	}
@@ -169,13 +174,15 @@ public class NovelSurfaceAnalyzer {
 		this.anchorPositions = anchorPositions;
 	}
 
-	public NovelSurfaceAnalyzer() throws IOException {
+	public NovelSurfaceAnalyzer(Level logLevel) throws IOException {
 		// parameters
 		nMer = 15;
 		anchorPositions = Arrays.asList(1, 4, 6, 9);
 		sequenceFileName = "customFactorviii_P00451.fasta";
 		scoreCode = "0"; // MHC(1) or comb (0) used for CTL only
 		type = PredictionType.MHCIIPAN31;
+		CustomLogger.setup();
+		LOGGER.setLevel(logLevel);
 		//
 
 		variants = new ArrayList<String>();
@@ -206,7 +213,7 @@ public class NovelSurfaceAnalyzer {
 
 		BufferedReader br = new BufferedReader(new FileReader(mutationFile));
 		try {
-			while ((line = br.readLine()) != null) {
+			while ((line = br.readLine()) != null && !line.trim().equals("") ) {
 				variants.add(line.trim());
 			}
 
@@ -250,7 +257,11 @@ public class NovelSurfaceAnalyzer {
 			// generate endogeneous sequence file
 			StringBuilder endSeq = new StringBuilder(subSequence);
 			int charIndex = variantPosition <= this.getnMer() ? variantPosition - 1 : this.getnMer() - 1;
-
+			if(endSeq.charAt(charIndex) != from.charAt(0)){
+				LOGGER.severe("Variant residue does not match to the full sequence." + variant);
+				continue;
+			}
+			
 			endSeq.setCharAt(charIndex, to.charAt(0));
 			String endFilefullContent = ">sp|" + inputSequence.getProteinId() + "|" + variantPosition + " " + from + "_"
 					+ to + "\n" + endSeq.toString();
@@ -350,11 +361,13 @@ public class NovelSurfaceAnalyzer {
 				/*
 				 * helpful output
 				 */
-				System.out.println(variant);
-				System.out.println(allele);
+				LOGGER.info(variant+"\n"+allele);
+				
+				StringBuilder sb = new StringBuilder();
 				for (MHCIIPeptideData p : remainingPeptides) {
-					System.out.println(p.toString());
+					sb.append(p.toStringLessFields() +"\n");
 				}
+				LOGGER.info(sb.toString());
 
 				// start proteome check:
 				runProteomeCheck(allele, variant, remainingPeptides);
@@ -433,9 +446,9 @@ public class NovelSurfaceAnalyzer {
 				/*
 				 * helpful output
 				 */
-				System.out.println(ensemblPepSeq.getProteinId() + ":" + ensemblPepSeq.getGeneSymbol() + ":"
-						+ ensemblPepSeq.getDescription());
-				System.out.println("------------------------------------------------------");
+				StringBuilder sb = new StringBuilder();
+				sb.append(ensemblPepSeq.getProteinId() + ":" + ensemblPepSeq.getGeneSymbol() + ":"
+						+ ensemblPepSeq.getDescription() + "\n");
 
 				/*
 				 * 
@@ -475,15 +488,15 @@ public class NovelSurfaceAnalyzer {
 								|| ensemblPepSeq.getProteinId().startsWith("ENSP00000471364"))) {
 					for (MHCIIPeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch, variantPosition)) {
-						System.out.println(pep.toString());
+						sb.append(pep.toStringLessFields() +"\n");
 					}
 				} else {
 					for (MHCIIPeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch)) {
-						System.out.println(pep.toString());
+						sb.append(pep.toStringLessFields() +"\n");
 					}
 				}
-				System.out.println("------------------------------------------------------");
+				LOGGER.info(sb.toString());
 
 				// pass the variant position as the panning position to ignore
 				// the peptides in that section for F8
@@ -506,22 +519,24 @@ public class NovelSurfaceAnalyzer {
 		/*
 		 * helpful output
 		 */
-		System.out.println("-------------------------PRINTING MATCH MAP-----------------------------");
+		StringBuilder sb = new StringBuilder();
+		sb.append("-------------------------PRINTING MATCH MAP-----------------------------\n");
+		
 		for (MHCIIPeptideData key : matchMap.keySet()) {
-			System.out.println("REMAINING=" + key.toString());
+			sb.append("REMAINING=" + key.toStringLessFields()+"\n");
 
 			MHCIIPeptideData match = matchMap.get(key);
 			if (match != null) {
-				System.out.println("MATCH=" + match.toString() + "\n");
+				sb.append("MATCH=" + match.toStringLessFields() + "\n");
 			} else {
-				System.out.println("NO MATCH");
+				sb.append("NO MATCH");
 			}
 
 		}
-		System.out.println("-------------------------END MATCH MAP----------------------------------");
-
+		sb.append("-------------------------END MATCH MAP------------------------------------");
+		LOGGER.info(sb.toString());
+		
 		int matchExists = 0;
-
 		for (MHCIIPeptideData key : matchMap.keySet()) {
 			MHCIIPeptideData match = matchMap.get(key);
 			if (match != null) {
@@ -557,36 +572,41 @@ public class NovelSurfaceAnalyzer {
 			}
 		}
 
-		/*
-		 * helpful output System.out.println("PEP1:" + novel.getPeptide1() +
-		 * "\n" + "PEP2:" + novel.getPeptide2() + "\n" + novel.getVariant() +
-		 * "\n" + novel.getAllele() + "\n" + novel.getColour());
-		 * System.out.println(
-		 * "******************************************************************************************************"
-		 * );
-		 */
-
 		FileUtils.cleanDirectory(new File(this.getTmpSequencePath()));
 
-		StringBuilder sb = new StringBuilder();
+		sb = new StringBuilder();
 		sb.append(novel.getVariant() + ",");
 		sb.append(novel.getAllele() + ",");
-		sb.append(((MHCIIPeptideData) novel.getPeptide1()).getPeptide() + ",");
-		sb.append(((MHCIIPeptideData) novel.getPeptide1()).getCorePeptide() + ",");
-		sb.append(((MHCIIPeptideData) novel.getPeptide1()).getIC50Score() + ",");
-		sb.append(((MHCIIPeptideData) novel.getPeptide2()).getPeptide() + ",");
-		sb.append(((MHCIIPeptideData) novel.getPeptide2()).getCorePeptide() + ",");
-		sb.append(((MHCIIPeptideData) novel.getPeptide2()).getIC50Score() + ",");
+		if(novel.getPeptide1()!=null){
+			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getPeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getCorePeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getIC50Score() + ",");
+		}
+		else{
+			sb.append("" + ",");
+			sb.append("" + ",");
+			sb.append("" + ",");
+		}
+		if(novel.getPeptide2()!=null){
+			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getPeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getCorePeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getIC50Score() + ",");
+		}
+		else{
+			sb.append("" + ",");
+			sb.append("" + ",");
+			sb.append("" + ",");
+		}
 		sb.append(novel.getColour());
 
 		writeToFinalOutputFile(sb.toString());
 		/* helpful output */
-		System.out.println("NOVEL:" + sb.toString());
+		LOGGER.info("NOVEL:" + sb.toString()+
+		"\n******************************************************************************");
 
 	}
 
 	private void writeToFinalOutputFile(String sb) throws IOException {
-		// TODO Auto-generated method stub
 		String header = "Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour";
 		String newLine = "\n";
 
