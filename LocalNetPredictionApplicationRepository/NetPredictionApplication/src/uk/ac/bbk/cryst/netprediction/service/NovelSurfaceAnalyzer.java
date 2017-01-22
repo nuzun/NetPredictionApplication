@@ -450,42 +450,14 @@ public class NovelSurfaceAnalyzer {
 				sb.append(ensemblPepSeq.getProteinId() + ":" + ensemblPepSeq.getGeneSymbol() + ":"
 						+ ensemblPepSeq.getDescription() + "\n");
 
-				/*
-				 * 
-				 * /**************** if
-				 * (StringUtils.isNotEmpty(ensemblPepSeq.getGeneSymbol()) &&
-				 * ensemblPepSeq.getGeneSymbol().equals("F8")) { for
-				 * (MHCIIPeptideData pep :
-				 * protNetPanData.getSpecificPeptideDataByMaskedCore(
-				 * remaining.getCorePeptide(), this.getAnchorPositions(),
-				 * isMatch, variantPosition)) {
-				 * System.out.println(pep.toString()); } } else{ for
-				 * (MHCIIPeptideData pep :
-				 * protNetPanData.getSpecificPeptideDataByMaskedCore(
-				 * remaining.getCorePeptide(), this.getAnchorPositions(),
-				 * isMatch)) { System.out.println(pep.toString()); } }
-				 * System.out.println(
-				 * "------------------------------------------------------"); //
-				 * 
-				 * //pass the variant position as the panning position to ignore
-				 * the peptides in that section for F8 if
-				 * (StringUtils.isNotEmpty(ensemblPepSeq.getGeneSymbol()) &&
-				 * ensemblPepSeq.getGeneSymbol().equals("F8")) {
-				 * matchingPeptides.addAll(protNetPanData.
-				 * getSpecificPeptideDataByMaskedCore(
-				 * remaining.getCorePeptide(), this.getAnchorPositions(),
-				 * isMatch, variantPosition)); } else {
-				 * matchingPeptides.addAll(protNetPanData.
-				 * getSpecificPeptideDataByMaskedCore(
-				 * remaining.getCorePeptide(), this.getAnchorPositions(),
-				 * isMatch)); }
-				 *********************
-				 */
-
 				/* helpful output*/
-				if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
-						&& (ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")
-								|| ensemblPepSeq.getProteinId().startsWith("ENSP00000471364"))) {
+				if(StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+						&& ensemblPepSeq.getProteinId().matches("ENSP00000471364|ENSP00000327895|ENSP00000470213|"
+								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")){
+					//do nothing	
+				}
+				else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+						&& ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")) {
 					for (MHCIIPeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch, variantPosition)) {
 						sb.append(pep.toStringLessFields() +"\n");
@@ -499,10 +471,19 @@ public class NovelSurfaceAnalyzer {
 				LOGGER.info(sb.toString());
 
 				// pass the variant position as the panning position to ignore
-				// the peptides in that section for F8
-				if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
-						&& (ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")
-								|| ensemblPepSeq.getProteinId().startsWith("ENSP00000471364"))) {
+				// the peptides in that section for F8 also ignore other transcripts
+				// F8-001:ENSP00000353393, ENSP00000471364 = they are the same
+				// F8-003:ENSP00000327895, ENSP00000470213
+				// F8-004:ENSP00000409446, ENSP00000469822
+				// F8-005:ENSP00000389153, ENSP00000469039
+				if(StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+						&& ensemblPepSeq.getProteinId().matches("ENSP00000471364|ENSP00000327895|ENSP00000470213|"
+								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")){
+					//do nothing	
+				}
+				else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+						&& ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")) {
+					
 					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch, variantPosition));
 				} else {
@@ -529,7 +510,7 @@ public class NovelSurfaceAnalyzer {
 			if (match != null) {
 				sb.append("MATCH=" + match.toStringLessFields() + "\n");
 			} else {
-				sb.append("NO MATCH");
+				sb.append("NO MATCH\n");
 			}
 
 		}
