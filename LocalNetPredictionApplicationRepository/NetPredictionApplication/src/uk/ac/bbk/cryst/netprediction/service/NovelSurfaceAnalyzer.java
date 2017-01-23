@@ -71,9 +71,9 @@ public class NovelSurfaceAnalyzer {
 	String proteomeOutputFullPathMHCIIPan;
 
 	String novelSurfacesFileFullPath;
-	
+
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-	
+
 	public String getNovelSurfacesFileFullPath() {
 		return novelSurfacesFileFullPath;
 	}
@@ -213,7 +213,7 @@ public class NovelSurfaceAnalyzer {
 
 		BufferedReader br = new BufferedReader(new FileReader(mutationFile));
 		try {
-			while ((line = br.readLine()) != null && !line.trim().equals("") ) {
+			while ((line = br.readLine()) != null && !line.trim().equals("")) {
 				variants.add(line.trim());
 			}
 
@@ -257,11 +257,11 @@ public class NovelSurfaceAnalyzer {
 			// generate endogeneous sequence file
 			StringBuilder endSeq = new StringBuilder(subSequence);
 			int charIndex = variantPosition <= this.getnMer() ? variantPosition - 1 : this.getnMer() - 1;
-			if(endSeq.charAt(charIndex) != from.charAt(0)){
+			if (endSeq.charAt(charIndex) != from.charAt(0)) {
 				LOGGER.severe("Variant residue does not match to the full sequence." + variant);
 				continue;
 			}
-			
+
 			endSeq.setCharAt(charIndex, to.charAt(0));
 			String endFilefullContent = ">sp|" + inputSequence.getProteinId() + "|" + variantPosition + " " + from + "_"
 					+ to + "\n" + endSeq.toString();
@@ -361,11 +361,11 @@ public class NovelSurfaceAnalyzer {
 				/*
 				 * helpful output
 				 */
-				LOGGER.info(variant+"\n"+allele);
-				
+				LOGGER.info(variant + "\n" + allele);
+
 				StringBuilder sb = new StringBuilder();
 				for (MHCIIPeptideData p : remainingPeptides) {
-					sb.append(p.toStringLessFields() +"\n");
+					sb.append(p.toStringLessFields() + "\n");
 				}
 				LOGGER.info(sb.toString());
 
@@ -450,40 +450,39 @@ public class NovelSurfaceAnalyzer {
 				sb.append(ensemblPepSeq.getProteinId() + ":" + ensemblPepSeq.getGeneSymbol() + ":"
 						+ ensemblPepSeq.getDescription() + "\n");
 
-				/* helpful output*/
-				if(StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+				/* helpful output */
+				if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
 						&& ensemblPepSeq.getProteinId().matches("ENSP00000471364|ENSP00000327895|ENSP00000470213|"
-								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")){
-					//do nothing	
-				}
-				else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")) {
+					// do nothing
+				} else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
 						&& ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")) {
 					for (MHCIIPeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch, variantPosition)) {
-						sb.append(pep.toStringLessFields() +"\n");
+						sb.append(pep.toStringLessFields() + "\n");
 					}
 				} else {
 					for (MHCIIPeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch)) {
-						sb.append(pep.toStringLessFields() +"\n");
+						sb.append(pep.toStringLessFields() + "\n");
 					}
 				}
 				LOGGER.info(sb.toString());
 
 				// pass the variant position as the panning position to ignore
-				// the peptides in that section for F8 also ignore other transcripts
+				// the peptides in that section for F8 also ignore other
+				// transcripts
 				// F8-001:ENSP00000353393, ENSP00000471364 = they are the same
 				// F8-003:ENSP00000327895, ENSP00000470213
 				// F8-004:ENSP00000409446, ENSP00000469822
 				// F8-005:ENSP00000389153, ENSP00000469039
-				if(StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+				if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
 						&& ensemblPepSeq.getProteinId().matches("ENSP00000471364|ENSP00000327895|ENSP00000470213|"
-								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")){
-					//do nothing	
-				}
-				else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
+								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")) {
+					// do nothing
+				} else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
 						&& ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")) {
-					
+
 					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch, variantPosition));
 				} else {
@@ -502,9 +501,9 @@ public class NovelSurfaceAnalyzer {
 		 */
 		StringBuilder sb = new StringBuilder();
 		sb.append("-------------------------PRINTING MATCH MAP-----------------------------\n");
-		
+
 		for (MHCIIPeptideData key : matchMap.keySet()) {
-			sb.append("REMAINING=" + key.toStringLessFields()+"\n");
+			sb.append("REMAINING=" + key.toStringLessFields() + "\n");
 
 			MHCIIPeptideData match = matchMap.get(key);
 			if (match != null) {
@@ -516,20 +515,29 @@ public class NovelSurfaceAnalyzer {
 		}
 		sb.append("-------------------------END MATCH MAP------------------------------------");
 		LOGGER.info(sb.toString());
+
+		int fullProtection = 1;
 		
-		int matchExists = 0;
 		for (MHCIIPeptideData key : matchMap.keySet()) {
 			MHCIIPeptideData match = matchMap.get(key);
 			if (match != null) {
-				matchExists = 1;
 				if (match.getIC50Score() > 1000) {
-
+					fullProtection = 0;
 					if (pep2.getPeptide() == null) {
 						pep2 = key;
 					} else {
 						if (key.getIC50Score() < pep2.getIC50Score()) {
 							pep2 = key;
 						}
+					}
+				}
+			} else {
+				fullProtection = 0;
+				if (pep2.getPeptide() == null) {
+					pep2 = key;
+				} else {
+					if (key.getIC50Score() < pep2.getIC50Score()) {
+						pep2 = key;
 					}
 				}
 			}
@@ -541,12 +549,9 @@ public class NovelSurfaceAnalyzer {
 		if (remainingPeptides.isEmpty()) {
 			novel.setColour("black");
 		} else {
-			if (pep2.getPeptide() == null && matchExists == 1) {
+			if (fullProtection == 1) {
 				// novel.setColour("pep1color/grey");
 				novel.setColour((int) Math.ceil(pep1.getIC50Score()) + "/grey");
-			} else if (pep2.getPeptide() == null && matchExists == 0) {
-				// novel.setColour("pep1color/pep1color");
-				novel.setColour((int) Math.ceil(pep1.getIC50Score()) + "/" + (int) Math.ceil(pep1.getIC50Score()));
 			} else {
 				// novel.setColour("pep1color/pep2color");
 				novel.setColour((int) Math.ceil(pep1.getIC50Score()) + "/" + (int) Math.ceil(pep2.getIC50Score()));
@@ -558,22 +563,20 @@ public class NovelSurfaceAnalyzer {
 		sb = new StringBuilder();
 		sb.append(novel.getVariant() + ",");
 		sb.append(novel.getAllele() + ",");
-		if(novel.getPeptide1()!=null){
+		if (novel.getPeptide1() != null) {
 			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getPeptide() + ",");
 			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getCorePeptide() + ",");
 			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getIC50Score() + ",");
-		}
-		else{
+		} else {
 			sb.append("" + ",");
 			sb.append("" + ",");
 			sb.append("" + ",");
 		}
-		if(novel.getPeptide2()!=null){
+		if (novel.getPeptide2() != null) {
 			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getPeptide() + ",");
 			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getCorePeptide() + ",");
 			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getIC50Score() + ",");
-		}
-		else{
+		} else {
 			sb.append("" + ",");
 			sb.append("" + ",");
 			sb.append("" + ",");
@@ -582,8 +585,8 @@ public class NovelSurfaceAnalyzer {
 
 		writeToFinalOutputFile(sb.toString());
 		/* helpful output */
-		LOGGER.info("NOVEL:" + sb.toString()+
-		"\n******************************************************************************");
+		LOGGER.info("NOVEL:" + sb.toString()
+				+ "\n******************************************************************************");
 
 	}
 
