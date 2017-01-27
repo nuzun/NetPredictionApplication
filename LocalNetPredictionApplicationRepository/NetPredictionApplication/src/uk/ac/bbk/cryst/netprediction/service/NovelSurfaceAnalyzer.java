@@ -178,7 +178,7 @@ public class NovelSurfaceAnalyzer {
 		// parameters
 		nMer = 15;
 		anchorPositions = Arrays.asList(1, 4, 6, 9);
-		sequenceFileName = "customFactorviii_P00451.fasta";
+		sequenceFileName = "factorviii_P00451.fasta";
 		scoreCode = "0"; // MHC(1) or comb (0) used for CTL only
 		type = PredictionType.MHCIIPAN31;
 		CustomLogger.setup();
@@ -249,7 +249,7 @@ public class NovelSurfaceAnalyzer {
 		for (String variant : this.getVariants()) {
 			String[] parts = variant.split("-");
 			String from = parts[0];
-			int variantPosition = Integer.valueOf(parts[1]);
+			int variantPosition = Integer.valueOf(parts[1]) + 19; //add for the numbering issue
 			String to = parts[2];
 
 			String subSequence = inputSequence.getPanningSequence(variantPosition, this.getnMer());
@@ -298,7 +298,7 @@ public class NovelSurfaceAnalyzer {
 		for (String variant : this.getVariants()) {
 			String[] parts = variant.split("-");
 			String from = parts[0];
-			int variantPosition = Integer.valueOf(parts[1]);
+			int variantPosition = Integer.valueOf(parts[1]) + 19; //add for the numbering issue;
 			String to = parts[2];
 
 			for (String allele : groupData.getAlleleMap().keySet()) {
@@ -382,7 +382,7 @@ public class NovelSurfaceAnalyzer {
 		boolean isMatch = false;// positions do not have to match so false
 		String[] parts = variant.split("-");
 		// String from = parts[0];
-		int variantPosition = Integer.valueOf(parts[1]);
+		int variantPosition = Integer.valueOf(parts[1]) + 19; //add for the numbering issue;
 		// String to = parts[2];
 
 		List<Sequence> matchList = new ArrayList<Sequence>();
