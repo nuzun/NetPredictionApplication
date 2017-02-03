@@ -178,7 +178,6 @@ public class NovelSurfaceAnalyzer {
 		// parameters
 		nMer = 15;
 		anchorPositions = Arrays.asList(1, 4, 6, 9);
-		sequenceFileName = "factorviii_P00451.fasta";
 		scoreCode = "0"; // MHC(1) or comb (0) used for CTL only
 		type = PredictionType.MHCIIPAN31;
 		CustomLogger.setup();
@@ -189,6 +188,7 @@ public class NovelSurfaceAnalyzer {
 		properties = new PropertiesHelper();
 		sequenceFactory = new SequenceFactory();
 
+		sequenceFileName = properties.getValue("sequenceFileName");
 		alleleFileFullPath = properties.getValue("alleleFileFullPath");
 		sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
 		comparePath = properties.getValue("comparePath");
