@@ -48,6 +48,7 @@ import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;
 public class NovelSurfaceAnalyzer {
 	// parameters
 	int nMer;
+	int IC50_threshold;
 	String sequenceFileName;
 	String scoreCode;
 	PredictionType type;
@@ -173,10 +174,19 @@ public class NovelSurfaceAnalyzer {
 	public void setAnchorPositions(List<Integer> anchorPositions) {
 		this.anchorPositions = anchorPositions;
 	}
+	
+	public int getIC50_threshold() {
+		return IC50_threshold;
+	}
+
+	public void setIC50_threshold(int iC50_threshold) {
+		IC50_threshold = iC50_threshold;
+	}
 
 	public NovelSurfaceAnalyzer(Level logLevel) throws IOException {
 		// parameters
 		nMer = 15;
+		IC50_threshold = 1000;
 		anchorPositions = Arrays.asList(1, 4, 6, 9);
 		scoreCode = "0"; // MHC(1) or comb (0) used for CTL only
 		type = PredictionType.MHCIIPAN31;
@@ -225,6 +235,7 @@ public class NovelSurfaceAnalyzer {
 
 	public void generateSequenceAndScoreFiles() throws Exception {
 
+		LOGGER.info("Enter generateSequenceAndScoreFiles");
 		// Read the alleles straight from region/group of alleles file
 		AlleleGroupData groupData = new AlleleGroupDataDaoImpl(this.getAlleleFileFullPath()).getGroupData();
 
@@ -287,6 +298,8 @@ public class NovelSurfaceAnalyzer {
 				}
 			}
 		} // variants
+		
+		LOGGER.info("Exit generateSequenceAndScoreFiles");
 	}
 
 	public void runEliminate() throws Exception {
@@ -317,7 +330,7 @@ public class NovelSurfaceAnalyzer {
 					int start = therPeptide.getStartPosition() + therPeptide.getCoreStartPosition();
 					int variantIndexAtCore = variantPosition - start - 1; // 0-8
 
-					if ((9 > variantIndexAtCore) && (variantIndexAtCore >= 0) && (therPeptide.getIC50Score() < 1000)) {
+					if ((9 > variantIndexAtCore) && (variantIndexAtCore >= 0) && (therPeptide.getIC50Score() < this.getIC50_threshold())) {
 
 						// check endo criteria
 						String endoFileName = fileName + "_" + variantPosition + from + to;
@@ -334,7 +347,7 @@ public class NovelSurfaceAnalyzer {
 							int allWeak = 1;
 							for (MHCIIPeptideData endoMatch : endoMatchList) {
 								// Check if we have at least one good binder
-								if (endoMatch.getIC50Score() < 1000) {
+								if (endoMatch.getIC50Score() < this.getIC50_threshold()) {
 									// check MHC/TCR
 									allWeak = 0;
 									if (this.getAnchorPositions().contains(variantIndexAtCore + 1)) {
@@ -521,7 +534,7 @@ public class NovelSurfaceAnalyzer {
 		for (MHCIIPeptideData key : matchMap.keySet()) {
 			MHCIIPeptideData match = matchMap.get(key);
 			if (match != null) {
-				if (match.getIC50Score() > 1000) {
+				if (match.getIC50Score() > this.getIC50_threshold()) {
 					fullProtection = 0;
 					if (pep2.getPeptide() == null) {
 						pep2 = key;
