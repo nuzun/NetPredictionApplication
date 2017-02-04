@@ -54,6 +54,7 @@ public class NovelSurfaceAnalyzer {
 	PredictionType type;
 	List<String> variants;
 	List<Integer> anchorPositions;
+	StringBuilder strForNovelFile;
 
 	PropertiesHelper properties;
 	SequenceFactory sequenceFactory;
@@ -189,6 +190,7 @@ public class NovelSurfaceAnalyzer {
 		IC50_threshold = 1000;
 		anchorPositions = Arrays.asList(1, 4, 6, 9);
 		scoreCode = "0"; // MHC(1) or comb (0) used for CTL only
+		strForNovelFile = new StringBuilder();
 		type = PredictionType.MHCIIPAN31;
 		CustomLogger.setup();
 		LOGGER.setLevel(logLevel);
@@ -386,6 +388,9 @@ public class NovelSurfaceAnalyzer {
 				runProteomeCheck(allele, variant, remainingPeptides);
 			}
 		} // variant
+		
+		//write the final novel data
+		writeToFinalOutputFile();
 	}
 
 	private void runProteomeCheck(String allele, String variant, List<MHCIIPeptideData> remainingPeptides)
@@ -595,15 +600,19 @@ public class NovelSurfaceAnalyzer {
 			sb.append("" + ",");
 		}
 		sb.append(novel.getColour());
+		sb.append("\n");
 
-		writeToFinalOutputFile(sb.toString());
+		strForNovelFile.append(sb.toString());
+		
 		/* helpful output */
 		LOGGER.info("NOVEL:" + sb.toString()
-				+ "\n******************************************************************************");
+				+ "******************************************************************************");
 
 	}
 
-	private void writeToFinalOutputFile(String sb) throws IOException {
+	private void writeToFinalOutputFile() throws IOException {
+		LOGGER.info("Enter writeToFinalOutputFile");
+		
 		String header = "Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour";
 		String newLine = "\n";
 
@@ -615,8 +624,9 @@ public class NovelSurfaceAnalyzer {
 		}
 
 		Path path = Paths.get(this.getNovelSurfacesFileFullPath());
-		Files.write(path, sb.getBytes(), StandardOpenOption.APPEND);
-		Files.write(path, newLine.getBytes(), StandardOpenOption.APPEND);
+		Files.write(path, strForNovelFile.toString().getBytes(), StandardOpenOption.APPEND);
+		
+		LOGGER.info("Exit writeToFinalOutputFile");
 	}
 
 }
