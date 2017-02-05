@@ -3,6 +3,8 @@ package uk.ac.bbk.cryst.netprediction.service;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
@@ -10,7 +12,7 @@ import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 public class NovelSurfaceResultsProcessor {
 
 	PropertiesHelper properties;
-	String novelSurfacesFileFullPath;
+	String novelSurfacesResultFilePath;
 
 	public PropertiesHelper getProperties() {
 		return properties;
@@ -20,19 +22,19 @@ public class NovelSurfaceResultsProcessor {
 		this.properties = properties;
 	}
 
-	public String getNovelSurfacesFileFullPath() {
-		return novelSurfacesFileFullPath;
+	public String getNovelSurfacesResultFilePath() {
+		return novelSurfacesResultFilePath;
 	}
 
-	public void setNovelSurfacesFileFullPath(String novelSurfacesFileFullPath) {
-		this.novelSurfacesFileFullPath = novelSurfacesFileFullPath;
+	public void setNovelSurfacesResultFilePath(String novelSurfacesResultFilePath) {
+		this.novelSurfacesResultFilePath = novelSurfacesResultFilePath;
 	}
 
 	public NovelSurfaceResultsProcessor() throws IOException {
 		super();
 
 		properties = new PropertiesHelper();
-		novelSurfacesFileFullPath = properties.getValue("novelSurfacesFileFullPath");
+		novelSurfacesResultFilePath = properties.getValue("novelSurfacesResultFilePath");
 	}
 
 	public void readNovelSurfaceResults() {
@@ -41,63 +43,83 @@ public class NovelSurfaceResultsProcessor {
 		// R-3-I,DRB1_0101,CLLRFCFSATRRYYL,FCFSATRRY,11.78,CLLRFCFSATRRYYL,FCFSATRRY,11.78,12/12
 		// G-22-C,DRB1_0101,WDYMQSDLGELPVDA,MQSDLGELP,449.39,null,null,null,450/grey
 		// T-49-A,DRB1_0101,,,,null,null,null,black
-		int numberOfBlacks = 0;
-		int numberOfGreys = 0;
-		int totalNumber = 0;
 
-		File novelSurfaceResultsFile = new File(this.getNovelSurfacesFileFullPath());
-		Scanner scanner = null;
+		String[] DRAlleles = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701",
+				"DRB1_0802", "DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501", "DRB3_0101", "DRB4_0101",
+				"DRB5_0101" };
 
-		try {
-			scanner = new Scanner(novelSurfaceResultsFile);
-			// Set the delimiter used in file
-			scanner.useDelimiter(",");
-			scanner.nextLine();
+		Map<String, Integer> variantBlacks = new HashMap<>();
+		Map<String, Integer> variantGreys = new HashMap<>();
 
-			while (scanner.hasNext()) {
-				String row = scanner.nextLine();
-				String[] elements = row.split(",");
+		for (String drAllele : DRAlleles) {
 
-				if (elements.length != 9) {
-					System.out.println("Error: Missing data");
-					return;
+			File novelSurfaceResultsFile = new File(
+					this.getNovelSurfacesResultFilePath() + "//novelSurfaces_" + drAllele + ".csv");
+			Scanner scanner = null;
+
+			try {
+
+				if (!novelSurfaceResultsFile.exists()) {
+					continue;
 				}
+				scanner = new Scanner(novelSurfaceResultsFile);
+				// Set the delimiter used in file
+				scanner.useDelimiter(",");
+				scanner.nextLine();
 
-				String variant = elements[0];
-				String allele = elements[1];
-				String peptide_1 = elements[2];
-				String corePeptide_1 = elements[3];
-				String IC50_1 = elements[4];
-				String peptide_2 = elements[5];
-				String corePeptide_2 = elements[6];
-				String IC50_2 = elements[7];
-				String colour = elements[8];
+				while (scanner.hasNext()) {
+					String row = scanner.nextLine();
+					String[] elements = row.split(",");
 
-				if (!colour.equals("black")) {
-					String[] items = colour.split("/");
-					if (items[1].equals("grey")) {
-						numberOfGreys++;
+					if (elements.length != 9) {
+						System.out.println("Error: Missing data");
+						return;
 					}
-				} else {
-					numberOfBlacks++;
+
+					String variant = elements[0];
+					String allele = elements[1];
+					String peptide_1 = elements[2];
+					String corePeptide_1 = elements[3];
+					String IC50_1 = elements[4];
+					String peptide_2 = elements[5];
+					String corePeptide_2 = elements[6];
+					String IC50_2 = elements[7];
+					String colour = elements[8];
+
+					if (!colour.equals("black")) {
+						String[] items = colour.split("/");
+						if (items[1].equals("grey")) {
+							if (variantGreys.containsKey(variant)) {
+								variantGreys.put(variant, variantGreys.get(variant) + 1);
+							}
+							else{
+								variantGreys.put(variant,1);	
+							}
+						}
+					} else {
+						if (variantBlacks.containsKey(variant)) {
+							variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+						}
+						else{
+							variantBlacks.put(variant,1);
+						}
+					}
+
 				}
 
-				totalNumber++;
-
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				if (scanner != null) {
+					scanner.close();
+				}
 			}
 
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		finally{
-			scanner.close();
-		}
-		
-		System.out.println("Black:" + numberOfBlacks);
-		System.out.println("Grey:" + numberOfGreys);
-		System.out.println("Total:" + totalNumber);
-		
+		} // for drAlleles
 
+		for (String key : variantBlacks.keySet()) {
+			System.out.println(key + ":" + variantBlacks.get(key));
+		}
 	}
 }
