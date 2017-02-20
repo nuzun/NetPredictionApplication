@@ -67,6 +67,7 @@ public class NovelSurfaceResultsProcessor {
 			try {
 
 				if (!novelSurfaceResultsFile.exists()) {
+					System.out.println("Error: Missing file");
 					continue;
 				}
 				scanner = new Scanner(novelSurfaceResultsFile);
@@ -95,6 +96,15 @@ public class NovelSurfaceResultsProcessor {
 
 					if (!colour.equals("black")) {
 						String[] items = colour.split("/");
+						
+						if (Float.valueOf(items[0]) >= threshold) {
+							if (variantBlacks.containsKey(variant)) {
+								variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+							} else {
+								variantBlacks.put(variant, 1);
+							}
+						}
+						
 						if (items[1].equals("grey")) {
 							if (variantGreys.containsKey(variant)) {
 								variantGreys.put(variant, variantGreys.get(variant) + 1);
@@ -102,16 +112,7 @@ public class NovelSurfaceResultsProcessor {
 								variantGreys.put(variant, 1);
 							}
 						}
-						else{
-							if(Float.valueOf(items[1]) > threshold){
-								if (variantBlacks.containsKey(variant)) {
-									variantBlacks.put(variant, variantBlacks.get(variant) + 1);
-								} else {
-									variantBlacks.put(variant, 1);
-								}
-							}
-						}
-						
+
 					} else {
 						if (variantBlacks.containsKey(variant)) {
 							variantBlacks.put(variant, variantBlacks.get(variant) + 1);
@@ -147,7 +148,7 @@ public class NovelSurfaceResultsProcessor {
 			}
 		}
 
-		writeToCsvFile(variantBlackList,threshold);
+		writeToCsvFile(variantBlackList, threshold);
 		System.out.println("Number of Novel Surfaces:" + numberOfNoNovelGenotypes);
 	}
 
