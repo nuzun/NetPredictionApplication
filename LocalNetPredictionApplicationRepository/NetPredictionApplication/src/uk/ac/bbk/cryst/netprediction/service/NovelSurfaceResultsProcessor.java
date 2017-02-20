@@ -2,12 +2,19 @@ package uk.ac.bbk.cryst.netprediction.service;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
+import uk.ac.bbk.cryst.netprediction.model.PatientData;
+import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
 
 public class NovelSurfaceResultsProcessor {
 
@@ -37,7 +44,7 @@ public class NovelSurfaceResultsProcessor {
 		novelSurfacesResultFilePath = properties.getValue("novelSurfacesResultFilePath");
 	}
 
-	public void readNovelSurfaceResults() {
+	public void readNovelSurfaceResults(Float threshold) {
 
 		// Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour
 		// R-3-I,DRB1_0101,CLLRFCFSATRRYYL,FCFSATRRY,11.78,CLLRFCFSATRRYYL,FCFSATRRY,11.78,12/12
@@ -48,8 +55,8 @@ public class NovelSurfaceResultsProcessor {
 				"DRB1_0802", "DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501", "DRB3_0101", "DRB4_0101",
 				"DRB5_0101" };
 
-		Map<String, Integer> variantBlacks = new HashMap<>();
-		Map<String, Integer> variantGreys = new HashMap<>();
+		Map<String, Integer> variantBlacks = new LinkedHashMap<>();
+		Map<String, Integer> variantGreys = new LinkedHashMap<>();
 
 		for (String drAllele : DRAlleles) {
 
@@ -91,17 +98,25 @@ public class NovelSurfaceResultsProcessor {
 						if (items[1].equals("grey")) {
 							if (variantGreys.containsKey(variant)) {
 								variantGreys.put(variant, variantGreys.get(variant) + 1);
-							}
-							else{
-								variantGreys.put(variant,1);	
+							} else {
+								variantGreys.put(variant, 1);
 							}
 						}
+						else{
+							if(Float.valueOf(items[1]) > threshold){
+								if (variantBlacks.containsKey(variant)) {
+									variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+								} else {
+									variantBlacks.put(variant, 1);
+								}
+							}
+						}
+						
 					} else {
 						if (variantBlacks.containsKey(variant)) {
 							variantBlacks.put(variant, variantBlacks.get(variant) + 1);
-						}
-						else{
-							variantBlacks.put(variant,1);
+						} else {
+							variantBlacks.put(variant, 1);
 						}
 					}
 
@@ -118,8 +133,43 @@ public class NovelSurfaceResultsProcessor {
 
 		} // for drAlleles
 
+		// print all black: genotypes with no novel surfaces: no risk of
+		// inhibitor formation
+		// copy them to variants_allBlack.csv
+		List<String> variantBlackList = new ArrayList<>();
+
+		int numberOfNoNovelGenotypes = 0;
 		for (String key : variantBlacks.keySet()) {
-			System.out.println(key + ":" + variantBlacks.get(key));
+			if (variantBlacks.get(key) == 14) {
+				System.out.println(key);
+				variantBlackList.add(key);
+				numberOfNoNovelGenotypes++;
+			}
 		}
+
+		writeToCsvFile(variantBlackList,threshold);
+		System.out.println("Number of Novel Surfaces:" + numberOfNoNovelGenotypes);
+	}
+
+	private void writeToCsvFile(List<String> variantBlackList, Float threshold) {
+		String csvFile = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
+		try {
+			FileWriter writer = new FileWriter(csvFile);
+			CSVUtils.writeLine(writer, Arrays.asList("Variant"));
+
+			for (String variant : variantBlackList) {
+				List<String> list = new ArrayList<>();
+				list.add(variant);
+				CSVUtils.writeLine(writer, list);
+			}
+
+			writer.flush();
+			writer.close();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 }

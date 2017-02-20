@@ -10,7 +10,12 @@ public class NovelSurfaceResultsProgram {
 		// TODO Auto-generated method stub
 
 		NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor();
-		processor.readNovelSurfaceResults();
+		processor.readNovelSurfaceResults(1000f);
+		processor.readNovelSurfaceResults(500f);
+		processor.readNovelSurfaceResults(300f);
+		processor.readNovelSurfaceResults(200f);
+		processor.readNovelSurfaceResults(100f);
+		processor.readNovelSurfaceResults(50f);
 
 	}
 
