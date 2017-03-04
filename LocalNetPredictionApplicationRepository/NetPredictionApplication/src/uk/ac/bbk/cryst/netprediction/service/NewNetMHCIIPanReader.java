@@ -28,7 +28,7 @@ public class NewNetMHCIIPanReader extends NetPanFileReader {
 
 		// 2.0 output is different from latest 3.1 version!!!!
 		String pattern = "\\s*(\\d+)" + // pos 1
-				"\\s+(\\w+\\_\\w+)" + // allele 2 DRB1_0101
+				"\\s+((?:HLA\\-)?\\w+[_|\\-]\\w+)" + // allele 2 DRB1_0101 | HLA-DPA10103-DPB10201
 				"\\s+([a-zA-Z]+)" + // peptide 3
 				"\\s+.+" + // identity
 				"\\s+(\\d+)" + // core start pos 4

@@ -20,6 +20,15 @@ public class NovelSurfaceResultsProcessor {
 
 	PropertiesHelper properties;
 	String novelSurfacesResultFilePath;
+	boolean proteomeScanningOn = false;
+
+	public boolean isProteomeScanningOn() {
+		return proteomeScanningOn;
+	}
+
+	public void setProteomeScanningOn(boolean proteomeScanningOn) {
+		this.proteomeScanningOn = proteomeScanningOn;
+	}
 
 	public PropertiesHelper getProperties() {
 		return properties;
@@ -37,11 +46,12 @@ public class NovelSurfaceResultsProcessor {
 		this.novelSurfacesResultFilePath = novelSurfacesResultFilePath;
 	}
 
-	public NovelSurfaceResultsProcessor() throws IOException {
+	public NovelSurfaceResultsProcessor(boolean proteomeScanning) throws IOException {
 		super();
 
 		properties = new PropertiesHelper();
 		novelSurfacesResultFilePath = properties.getValue("novelSurfacesResultFilePath");
+		proteomeScanningOn = proteomeScanning;
 	}
 
 	public void readNovelSurfaceResults(Float threshold) {
@@ -96,24 +106,51 @@ public class NovelSurfaceResultsProcessor {
 
 					if (!colour.equals("black")) {
 						String[] items = colour.split("/");
-						
-						if (Float.valueOf(items[0]) >= threshold) {
-							if (variantBlacks.containsKey(variant)) {
-								variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+
+						if (this.isProteomeScanningOn()) {
+							if (items[1].equals("grey")) {
+								if (variantBlacks.containsKey(variant)) {
+									variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+								} else {
+									variantBlacks.put(variant, 1);
+								}
+
+								if (variantGreys.containsKey(variant)) {
+									variantGreys.put(variant, variantGreys.get(variant) + 1);
+								} else {
+									variantGreys.put(variant, 1);
+								}
 							} else {
-								variantBlacks.put(variant, 1);
+								if (Float.valueOf(items[1]) >= threshold) {
+									if (variantBlacks.containsKey(variant)) {
+										variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+									} else {
+										variantBlacks.put(variant, 1);
+									}
+								}
 							}
-						}
-						
-						if (items[1].equals("grey")) {
-							if (variantGreys.containsKey(variant)) {
-								variantGreys.put(variant, variantGreys.get(variant) + 1);
-							} else {
-								variantGreys.put(variant, 1);
+						} // if isProteomeScanningOn
+						else {
+							if (items[1].equals("grey")) {
+								if (variantGreys.containsKey(variant)) {
+									variantGreys.put(variant, variantGreys.get(variant) + 1);
+								} else {
+									variantGreys.put(variant, 1);
+								}
 							}
+
+							if (Float.valueOf(items[0]) >= threshold) {
+								if (variantBlacks.containsKey(variant)) {
+									variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+								} else {
+									variantBlacks.put(variant, 1);
+								}
+							}
+
 						}
 
-					} else {
+					}//if colour not black
+					else{
 						if (variantBlacks.containsKey(variant)) {
 							variantBlacks.put(variant, variantBlacks.get(variant) + 1);
 						} else {

@@ -109,6 +109,31 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("D=" + dList.size());
+			
+			List<PatientData> xList = patientList.stream()
+					.filter(p ->  p.isInhibitorFormation())
+					.collect(Collectors.toList());
+			// printList(dList);
+			System.out.println("observed inhibitor formation=" + xList.size());
+			
+			List<PatientData> yList = patientList.stream()
+					.filter(p ->  !p.isInhibitorFormation())
+					.collect(Collectors.toList());
+			// printList(dList);
+			System.out.println("observed no inhibitors=" + yList.size());
+			
+			List<PatientData> zList = patientList.stream()
+					.filter(p ->  !allBlack.contains(p.getVariant()))
+					.collect(Collectors.toList());
+			// printList(dList);
+			System.out.println("predicted inhibitor formation=" + zList.size());
+			
+			List<PatientData> tList = patientList.stream()
+					.filter(p ->  allBlack.contains(p.getVariant()))
+					.collect(Collectors.toList());
+			// printList(dList);
+			System.out.println("predicted no inhibitors=" + tList.size());
+			
 		} catch (Exception ex) {
 
 		}

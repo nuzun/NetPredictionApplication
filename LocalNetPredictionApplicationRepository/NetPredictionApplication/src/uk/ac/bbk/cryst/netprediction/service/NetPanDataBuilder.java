@@ -16,28 +16,38 @@ import uk.ac.bbk.cryst.netprediction.model.NetPanData;
 
 public class NetPanDataBuilder {
 
-	String pattern;
+	List<String> patternList;
 	PredictionType type;
 
 	public NetPanDataBuilder(PredictionType type) throws IOException {
 		PropertiesHelper properties = new PropertiesHelper();
 		this.type = type;
+		patternList = new ArrayList<>();
 
-		if ((this.type == PredictionType.MHCII) || (this.type == PredictionType.MHCIIPAN20) || (this.type == PredictionType.MHCIIPAN31)) {
-			pattern = properties.getValue("scoreFileNamePatternMHCII");
+		if ((this.type == PredictionType.MHCII) || (this.type == PredictionType.MHCIIPAN20)
+				|| (this.type == PredictionType.MHCIIPAN31)) {
+			patternList.add(properties.getValue("scoreFileNamePatternMHCII"));
+			patternList.add(properties.getValue("scoreFileNamePatternMHCIIDPQ"));
 		} else
-			pattern = properties.getValue("scoreFileNamePatternMHCI");
+			patternList.add(properties.getValue("scoreFileNamePatternMHCI"));
 	}
-	
+
 	public NetPanData buildSingleFileData(File outputDir) throws Exception {
 
 		NetPanData netPanData = null;
+		Pattern p = Pattern.compile(patternList.get(0));
 
 		if (!outputDir.isDirectory()) {
 			// Create a Pattern object
-			Pattern r = Pattern.compile(pattern);
+			for (String rx : patternList) {
+				p = Pattern.compile(rx);
+				if (p.matcher(outputDir.getName()).matches()) {
+					break;
+				}
+			}
+
 			// Now create matcher object.
-			Matcher m = r.matcher(outputDir.getName());
+			Matcher m = p.matcher(outputDir.getName());
 
 			if (m.find()) {
 				String foundProteinNameAndId = m.group(2);
@@ -63,12 +73,18 @@ public class NetPanDataBuilder {
 	public List<NetPanData> buildFileData(File outputDir) throws Exception {
 
 		List<NetPanData> netPanDataList = new ArrayList<NetPanData>();
+		Pattern p = Pattern.compile(patternList.get(0));
 
 		if (!outputDir.isDirectory()) {
 			// Create a Pattern object
-			Pattern r = Pattern.compile(pattern);
+			for (String rx : patternList) {
+				p = Pattern.compile(rx);
+				if (p.matcher(outputDir.getName()).matches()) {
+					break;
+				}
+			}
 			// Now create matcher object.
-			Matcher m = r.matcher(outputDir.getName());
+			Matcher m = p.matcher(outputDir.getName());
 
 			if (m.find()) {
 				String foundProteinNameAndId = m.group(2);
@@ -95,9 +111,14 @@ public class NetPanDataBuilder {
 			}
 
 			// Create a Pattern object
-			Pattern r = Pattern.compile(pattern);
+			for (String rx : patternList) {
+				p = Pattern.compile(rx);
+				if (p.matcher(fileEntry.getName()).matches()) {
+					break;
+				}
+			}
 			// Now create matcher object.
-			Matcher m = r.matcher(fileEntry.getName());
+			Matcher m = p.matcher(fileEntry.getName());
 
 			if (m.find()) {
 				String foundProteinNameAndId = m.group(2);
@@ -128,18 +149,25 @@ public class NetPanDataBuilder {
 		// for each file in the folder check the name
 		// if it matches our input, then find the rank of the peptide
 		NetPanData netPanData = null;
+		Pattern p = Pattern.compile(patternList.get(0));
 
-		//full path of the file
+		// full path of the file
 		if (!outputDir.isDirectory()) {
 			// Create a Pattern object
-			Pattern r = Pattern.compile(pattern);
+			for (String rx : patternList) {
+				p = Pattern.compile(rx);
+				if (p.matcher(outputDir.getName()).matches()) {
+					break;
+				}
+			}
 			// Now create matcher object.
-			Matcher m = r.matcher(outputDir.getName());
+			Matcher m = p.matcher(outputDir.getName());
 
 			if (m.find()) {
 				String foundProteinNameAndId = m.group(2);
 				String foundAllele = m.group(3);
-				if (StringUtils.isNotEmpty(foundProteinNameAndId) && StringUtils.equals(foundProteinNameAndId, fastaFileName)
+				if (StringUtils.isNotEmpty(foundProteinNameAndId)
+						&& StringUtils.equals(foundProteinNameAndId, fastaFileName)
 						&& StringUtils.equals(foundAllele, alleleName)) {
 
 					// found the file
@@ -151,7 +179,8 @@ public class NetPanDataBuilder {
 					return netPanData;
 				}
 
-				else if (StringUtils.isNotEmpty(foundProteinNameAndId) && foundProteinNameAndId.startsWith(fastaFileName)
+				else if (StringUtils.isNotEmpty(foundProteinNameAndId)
+						&& foundProteinNameAndId.startsWith(fastaFileName)
 						&& StringUtils.equals(foundAllele, alleleName)) {
 					NetPanFileReader reader = NetPanFileReaderFactory.getReader(type, outputDir, foundProteinNameAndId,
 							foundAllele);
@@ -170,16 +199,22 @@ public class NetPanDataBuilder {
 				// System.exit(0);
 				continue;
 			}
-
 			// Create a Pattern object
-			Pattern r = Pattern.compile(pattern);
+			for (String rx : patternList) {
+				p = Pattern.compile(rx);
+				if (p.matcher(fileEntry.getName()).matches()) {
+					break;
+				}
+			}
+
 			// Now create matcher object.
-			Matcher m = r.matcher(fileEntry.getName());
+			Matcher m = p.matcher(fileEntry.getName());
 
 			if (m.find()) {
 				String foundProteinNameAndId = m.group(2);
 				String foundAllele = m.group(3);
-				if (StringUtils.isNotEmpty(foundProteinNameAndId) && StringUtils.equals(foundProteinNameAndId, fastaFileName)
+				if (StringUtils.isNotEmpty(foundProteinNameAndId)
+						&& StringUtils.equals(foundProteinNameAndId, fastaFileName)
 						&& StringUtils.equals(foundAllele, alleleName)) {
 
 					// found the file
@@ -191,7 +226,8 @@ public class NetPanDataBuilder {
 					return netPanData;
 				}
 
-				else if (StringUtils.isNotEmpty(foundProteinNameAndId) && foundProteinNameAndId.startsWith(fastaFileName)
+				else if (StringUtils.isNotEmpty(foundProteinNameAndId)
+						&& foundProteinNameAndId.startsWith(fastaFileName)
 						&& StringUtils.equals(foundAllele, alleleName)) {
 					NetPanFileReader reader = NetPanFileReaderFactory.getReader(type, fileEntry, foundProteinNameAndId,
 							foundAllele);

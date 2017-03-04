@@ -9,7 +9,7 @@ public class NovelSurfaceResultsProgram {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 
-		NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor();
+		NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(true);
 		processor.readNovelSurfaceResults(1000f);
 		processor.readNovelSurfaceResults(500f);
 		processor.readNovelSurfaceResults(300f);
