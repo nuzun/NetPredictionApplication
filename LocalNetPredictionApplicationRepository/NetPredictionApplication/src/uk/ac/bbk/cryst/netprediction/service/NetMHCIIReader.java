@@ -37,9 +37,9 @@ public class NetMHCIIReader extends NetPanFileReader {
 		 */
 
 		// 2.2 version
-		// TODO:reconsider MIN_VALUE stuff and identity maybe you need a different model class
+		// TODO:reconsider MIN_VALUE stuff and identity maybe you need a different model class and corestartposition
 
-		String pattern = "\\s*(\\w+[-]\\w+)" + // allele 1
+		String pattern = "\\s*((?:HLA\\-)\\w+[-]?\\w+?)" + // allele 1
 				"\\s+(\\d+)" + // pos 2
 				"\\s+([a-zA-Z]+)" + // peptide 3
 				"\\s+([a-zA-Z]+)" + // core peptide 4
@@ -74,7 +74,8 @@ public class NetMHCIIReader extends NetPanFileReader {
 					String rankPerTxt = m.group(8);
 					String identity = m.group(9);
 					String binder = "";
-					int coreStartPosition = -1;
+				
+					int coreStartPosition = peptideTxt.indexOf(corePeptideTxt);
 
 					if (StringUtils.isNotEmpty(m.group(7))) {
 						binder = m.group(7).trim();

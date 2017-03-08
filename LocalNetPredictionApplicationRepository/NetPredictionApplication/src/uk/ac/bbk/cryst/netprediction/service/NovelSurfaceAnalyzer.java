@@ -68,9 +68,9 @@ public class NovelSurfaceAnalyzer {
 	String sequenceFileFullPath;
 	String mutationFileFullPath;
 
-	String variantOutputFullPathMHCIIPan;
-	String endogenousOutputFullPathMHCIIPan;
-	String proteomeOutputFullPathMHCIIPan;
+	String variantOutputFullPath;
+	String endogenousOutputFullPath;
+	String proteomeOutputFullPath;
 
 	String novelSurfacesFileFullPath;
 
@@ -92,8 +92,8 @@ public class NovelSurfaceAnalyzer {
 		return tmpSequencePath;
 	}
 
-	public String getProteomeOutputFullPathMHCIIPan() {
-		return proteomeOutputFullPathMHCIIPan;
+	public String getProteomeOutputFullPath() {
+		return proteomeOutputFullPath;
 	}
 
 	public String getComparePath() {
@@ -112,12 +112,12 @@ public class NovelSurfaceAnalyzer {
 		return sequenceFileFullPath;
 	}
 
-	public String getVariantOutputFullPathMHCIIPan() {
-		return variantOutputFullPathMHCIIPan;
+	public String getVariantOutputFullPath() {
+		return variantOutputFullPath;
 	}
 
-	public String getEndogenousOutputFullPathMHCIIPan() {
-		return endogenousOutputFullPathMHCIIPan;
+	public String getEndogenousOutputFullPath() {
+		return endogenousOutputFullPath;
 	}
 
 	public int getnMer() {
@@ -191,7 +191,7 @@ public class NovelSurfaceAnalyzer {
 		anchorPositions = Arrays.asList(1, 4, 6, 9);
 		scoreCode = "0"; // MHC(1) or comb (0) used for CTL only
 		strForNovelFile = new StringBuilder();
-		type = PredictionType.MHCIIPAN31;
+		type = PredictionType.MHCII;
 		CustomLogger.setup();
 		LOGGER.setLevel(logLevel);
 		//
@@ -208,9 +208,12 @@ public class NovelSurfaceAnalyzer {
 		proteomeSequencePath = properties.getValue("proteomeSequencePath");
 		variantSequencePath = properties.getValue("variantSequencePath");
 
-		variantOutputFullPathMHCIIPan = properties.getValue("variantOutputFullPathMHCIIPan");
-		endogenousOutputFullPathMHCIIPan = properties.getValue("endogenousOutputFullPathMHCIIPan");
-		proteomeOutputFullPathMHCIIPan = properties.getValue("proteomeOutputFullPathMHCIIPan");
+		variantOutputFullPath = type.equals(PredictionType.MHCIIPAN31) ? 
+				properties.getValue("variantOutputFullPathMHCIIPan") : properties.getValue("variantOutputFullPathMHCII");
+		endogenousOutputFullPath = type.equals(PredictionType.MHCIIPAN31) ? 
+				properties.getValue("endogenousOutputFullPathMHCIIPan"): properties.getValue("endogenousOutputFullPathMHCII");
+		proteomeOutputFullPath = type.equals(PredictionType.MHCIIPAN31) ? 
+				properties.getValue("proteomeOutputFullPathMHCIIPan") : properties.getValue("proteomeOutputFullPathMHCII");
 
 		mutationFileFullPath = properties.getValue("mutationFileFullPath");
 		File mutationFile = new File(mutationFileFullPath);
@@ -248,7 +251,7 @@ public class NovelSurfaceAnalyzer {
 		// for each allele, generate the score file for the full sequence once
 		String variantOutputFileFullPath = "";
 		for (String allele : groupData.getAlleleMap().keySet()) {
-			variantOutputFileFullPath = this.getVariantOutputFullPathMHCIIPan()
+			variantOutputFileFullPath = this.getVariantOutputFullPath()
 					+ FilenameUtils.removeExtension(this.getSequenceFileName()) + "_" + allele + ".txt";
 
 			File scoreFileToCreate = new File(variantOutputFileFullPath);
@@ -289,7 +292,7 @@ public class NovelSurfaceAnalyzer {
 			String endogeneousOutputFileFullPath = "";
 			for (String allele : groupData.getAlleleMap().keySet()) {
 
-				endogeneousOutputFileFullPath = this.getEndogenousOutputFullPathMHCIIPan()
+				endogeneousOutputFileFullPath = this.getEndogenousOutputFullPath()
 						+ FilenameUtils.removeExtension(this.getSequenceFileName()) + "_" + allele + ".txt" + "_"
 						+ variantPosition + from + to;
 
@@ -321,7 +324,7 @@ public class NovelSurfaceAnalyzer {
 
 				String fileName = FilenameUtils.removeExtension(this.getSequenceFileName()) + "_" + allele + ".txt";
 				NetPanData variantNetPanData = builder
-						.buildSingleFileData(new File(this.getVariantOutputFullPathMHCIIPan() + fileName));
+						.buildSingleFileData(new File(this.getVariantOutputFullPath() + fileName));
 
 				for (PeptideData peptide : variantNetPanData.getPanningPeptideList(variantPosition)) {
 					MHCIIPeptideData therPeptide = (MHCIIPeptideData) peptide;
@@ -337,7 +340,7 @@ public class NovelSurfaceAnalyzer {
 						// check endo criteria
 						String endoFileName = fileName + "_" + variantPosition + from + to;
 						NetPanData endoNetPanData = builder.buildSingleFileData(
-								new File(this.getEndogenousOutputFullPathMHCIIPan() + endoFileName));
+								new File(this.getEndogenousOutputFullPath() + endoFileName));
 
 						// continue if the core is the same with any endo core
 						StringBuilder endoCore = new StringBuilder(therPeptide.getCorePeptide());
@@ -452,7 +455,7 @@ public class NovelSurfaceAnalyzer {
 					FileHelper.writeToFile(proteomeSeqFile, proteomeSeqFileFullContent);
 				}
 
-				String proteomeOutputFileFullPath = this.getProteomeOutputFullPathMHCIIPan()
+				String proteomeOutputFileFullPath = this.getProteomeOutputFullPath()
 						+ FilenameUtils.removeExtension(proteomeSeqFileName) + "_" + allele + ".txt";
 				File proteomeScoreFileToCreate = new File(proteomeOutputFileFullPath);
 				if (!proteomeScoreFileToCreate.exists()) {

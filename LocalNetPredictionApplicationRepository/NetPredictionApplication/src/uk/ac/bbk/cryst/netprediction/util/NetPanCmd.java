@@ -38,7 +38,8 @@ public class NetPanCmd {
 					 outputFileFullPath;
 			break;
 		case MHCII:
-			scriptLine = properties.getValue("netMHCIIScript") + " "+ ("HLA-"+ allele.replace("_", "")) + " " +
+			scriptLine = properties.getValue("netMHCIIScript") + " "+ 
+					 (allele.startsWith("HLA") ? allele : ("HLA-"+ allele.replace("_", ""))) + " " +
 					 peptideLength + " " + 
 					 sequenceFileFullPath + " " +
 					 outputFileFullPath;
