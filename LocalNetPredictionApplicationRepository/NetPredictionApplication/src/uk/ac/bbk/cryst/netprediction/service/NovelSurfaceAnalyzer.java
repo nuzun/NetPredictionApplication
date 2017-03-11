@@ -426,13 +426,24 @@ public class NovelSurfaceAnalyzer {
 		sequenceComparator.setInputFileType(FastaFileType.UNIPROT);
 		sequenceComparator.setCompareFileType(FastaFileType.ENSEMBLPEP);
 
+		// read the compareDir and all the files as there might be more than one
+		List<Sequence> seq2List = new ArrayList<>();
+		File compareDir = new File(this.getComparePath());
+		for (final File fileEntry : compareDir.listFiles()) {
+			if (fileEntry.isDirectory()) {
+				// ignore the directory and continue, we want one compare file
+				continue;
+			}
+			List<Sequence> tempList = this.getSequenceFactory().getSequenceList(fileEntry, FastaFileType.ENSEMBLPEP);
+			seq2List.addAll(tempList);
+		}
+
 		NovelPeptideSurface novel = new NovelPeptideSurface();
 		novel.setAllele(allele);
 		novel.setVariant(variant);
 
 		MHCIIPeptideData pep1 = new MHCIIPeptideData();
 		MHCIIPeptideData pep2 = new MHCIIPeptideData();
-
 		pep1 = PeptideDataHelper.getTheStrongestBinderII(remainingPeptides);
 
 		for (MHCIIPeptideData remaining : remainingPeptides) {
@@ -450,16 +461,19 @@ public class NovelSurfaceAnalyzer {
 
 			FileHelper.writeToFile(tmpSeqFile, tmpSeqFileFullContent);
 
-			matchList = sequenceComparator.runMatchFinder(tmpSeqFile, this.getComparePath(), this.getAnchorPositions(),
-					isMatch, coreNMer);
+			// this returns only panning seq of the matching proteome seq
+			// 9mer match start position is the center and we get 15mer panning
+			// sequence
+			// aaaaaaaaaaaaaaMAAAAAAAAaaaaaa
+			matchList = sequenceComparator.runMatchFinder(tmpSeqFile, seq2List, this.getAnchorPositions(), isMatch,
+					coreNMer);
 
 			List<MHCIIPeptideData> matchingPeptides = new ArrayList<MHCIIPeptideData>();
 			// run predictions on the matching proteome sequences
 			for (Sequence seq : matchList) {
-				EnsemblPepSequence ensemblPepSeq = (EnsemblPepSequence) seq;
-				String proteomeSeqFileFullContent = ">sp|" + ensemblPepSeq.getProteinId() + "|"
-						+ ensemblPepSeq.getDescription() + "\n" + ensemblPepSeq.getSequence();
-				String proteomeSeqFileName = ensemblPepSeq.getProteinId() + ".fasta";
+
+				String proteomeSeqFileFullContent = ">sp|" + seq.getProteinId() + "\n" + seq.getSequence();
+				String proteomeSeqFileName = seq.getProteinId() + ".fasta";
 				File proteomeSeqFile = new File(this.getProteomeSequencePath() + proteomeSeqFileName);
 
 				if (!proteomeSeqFile.exists()) {
@@ -479,18 +493,28 @@ public class NovelSurfaceAnalyzer {
 				 * helpful output
 				 */
 				StringBuilder sb = new StringBuilder();
-				sb.append(ensemblPepSeq.getProteinId() + ":" + ensemblPepSeq.getGeneSymbol() + ":"
-						+ ensemblPepSeq.getDescription() + "\n");
+				sb.append(seq.getProteinId() + "\n");
 
 				/* helpful output */
-				if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
-						&& ensemblPepSeq.getProteinId().matches("ENSP00000471364|ENSP00000327895|ENSP00000470213|"
-								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")) {
+				if (StringUtils.isNotEmpty(seq.getProteinId())
+						&& seq.getProteinId().matches("(ENSP00000471364|ENSP00000327895|ENSP00000470213|"
+								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039).*")) {
 					// do nothing
-				} else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
-						&& ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")) {
+				} else if (StringUtils.isNotEmpty(seq.getProteinId())
+						&& seq.getProteinId().startsWith("ENSP00000353393")) {
+					// get the match start position from new protein id
+					// for variant 593 you have 612 as new variant pos meaning
+					// 611 index starting from 0
+					// if that value => than match start pos and <= the end of
+					// the match then we have our match
+					// in the variant area of the factor8.
+					int protMatchStartPos = Integer
+							.valueOf(seq.getProteinId().substring(seq.getProteinId().lastIndexOf("_") + 1));
+					if (protMatchStartPos <= (variantPosition - 1) && (variantPosition - 1) <= protMatchStartPos + 8) {
+						continue;
+					}
 					for (MHCIIPeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedCore(
-							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch, variantPosition)) {
+							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch)) {
 						sb.append(pep.toStringLessFields() + "\n");
 					}
 				} else {
@@ -508,15 +532,26 @@ public class NovelSurfaceAnalyzer {
 				// F8-003:ENSP00000327895, ENSP00000470213
 				// F8-004:ENSP00000409446, ENSP00000469822
 				// F8-005:ENSP00000389153, ENSP00000469039
-				if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
-						&& ensemblPepSeq.getProteinId().matches("ENSP00000471364|ENSP00000327895|ENSP00000470213|"
-								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039")) {
+				if (StringUtils.isNotEmpty(seq.getProteinId())
+						&& seq.getProteinId().matches("(ENSP00000471364|ENSP00000327895|ENSP00000470213|"
+								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039).*")) {
 					// do nothing
-				} else if (StringUtils.isNotEmpty(ensemblPepSeq.getProteinId())
-						&& ensemblPepSeq.getProteinId().startsWith("ENSP00000353393")) {
+				} else if (StringUtils.isNotEmpty(seq.getProteinId())
+						&& seq.getProteinId().startsWith("ENSP00000353393")) {
 
+					// get the match start position from new protein id
+					// for variant 593 you have 612 as new variant pos meaning
+					// 611 index starting from 0
+					// if that value => than match start pos and <= the end of
+					// the match then we have our match
+					// in the variant area of the factor8.
+					int protMatchStartPos = Integer
+							.valueOf(seq.getProteinId().substring(seq.getProteinId().lastIndexOf("_") + 1));
+					if (protMatchStartPos <= (variantPosition - 1) && (variantPosition - 1) <= protMatchStartPos + 8) {
+						continue;
+					}
 					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedCore(
-							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch, variantPosition));
+							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch));
 				} else {
 					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedCore(
 							remaining.getCorePeptide(), this.getAnchorPositions(), isMatch));

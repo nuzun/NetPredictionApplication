@@ -48,6 +48,9 @@ public abstract class Sequence {
 		return sequenceArray;
 	}
 	
+	/**
+	 * when passing the position, assume it starts from 1
+	 */
 	public String getPanningSequence(int position, int nMer){
 		int startIndex = 0;
 		int endIndex = 0;
