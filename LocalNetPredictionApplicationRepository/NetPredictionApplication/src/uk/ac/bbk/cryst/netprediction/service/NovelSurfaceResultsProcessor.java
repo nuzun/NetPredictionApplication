@@ -6,14 +6,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
-import uk.ac.bbk.cryst.netprediction.model.PatientData;
 import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
 
 public class NovelSurfaceResultsProcessor {

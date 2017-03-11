@@ -34,7 +34,6 @@ import uk.ac.bbk.cryst.netprediction.util.FileHelper;
 import uk.ac.bbk.cryst.netprediction.util.NetPanCmd;
 import uk.ac.bbk.cryst.netprediction.util.PeptideDataHelper;
 import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
-import uk.ac.bbk.cryst.sequenceanalysis.model.EnsemblPepSequence;
 import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceComparator;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;

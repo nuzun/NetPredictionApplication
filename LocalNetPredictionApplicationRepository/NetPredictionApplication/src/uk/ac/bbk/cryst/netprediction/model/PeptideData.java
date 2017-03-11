@@ -1,12 +1,5 @@
 package uk.ac.bbk.cryst.netprediction.model;
 
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-
-import javax.sql.RowSet;
-import javax.sql.rowset.Predicate;
-
 import org.apache.commons.lang3.StringUtils;
 
 public abstract class PeptideData implements Comparable<PeptideData> {
@@ -98,6 +91,5 @@ public abstract class PeptideData implements Comparable<PeptideData> {
 	public String toStringNoHeader() {
 		return "";
 	}
-
 
 }

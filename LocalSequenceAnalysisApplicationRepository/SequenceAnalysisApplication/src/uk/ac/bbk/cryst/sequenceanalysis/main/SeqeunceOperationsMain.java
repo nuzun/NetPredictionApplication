@@ -1,14 +1,8 @@
 package uk.ac.bbk.cryst.sequenceanalysis.main;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import uk.ac.bbk.cryst.sequenceanalysis.common.SequenceAnalysisProperties;
-import uk.ac.bbk.cryst.sequenceanalysis.model.UniProtSequence;
-import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;
-import uk.ac.bbk.cryst.sequenceanalysis.util.SequenceOperationsHelper;
 
 public class SeqeunceOperationsMain {
 
@@ -23,7 +17,7 @@ public class SeqeunceOperationsMain {
 		
 		SequenceAnalysisProperties programProperties = new SequenceAnalysisProperties();
 
-		File file1 = new File(programProperties.getValue("inputPath") + "survivin_O15392.fasta"); 		 	
+		//File file1 = new File(programProperties.getValue("inputPath") + "survivin_O15392.fasta"); 		 	
 	 	
 		//passed!
 		//File file1 = new File(programProperties.getValue("inputPath") + "test/test12.fasta"); 	

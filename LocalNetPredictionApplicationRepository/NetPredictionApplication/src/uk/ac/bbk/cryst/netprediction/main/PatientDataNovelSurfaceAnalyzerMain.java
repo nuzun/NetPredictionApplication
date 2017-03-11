@@ -9,10 +9,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,11 +28,11 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 
 		try {
 			List<PatientData> patientList = readPatientFile();
-			
+
 			String allBlackFilePath = "data//output//variants_allBlack_1000.csv";
 			System.out.println(1000);
 			getResults(patientList, allBlackFilePath);
-			
+
 			allBlackFilePath = "data//output//variants_allBlack_500.csv";
 			System.out.println(500);
 			getResults(patientList, allBlackFilePath);
@@ -42,19 +40,18 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			allBlackFilePath = "data//output//variants_allBlack_300.csv";
 			System.out.println(300);
 			getResults(patientList, allBlackFilePath);
-			
+
 			allBlackFilePath = "data//output//variants_allBlack_200.csv";
 			System.out.println(200);
 			getResults(patientList, allBlackFilePath);
-			
+
 			allBlackFilePath = "data//output//variants_allBlack_100.csv";
 			System.out.println(100);
 			getResults(patientList, allBlackFilePath);
-			
+
 			allBlackFilePath = "data//output//variants_allBlack_50.csv";
 			System.out.println(50);
 			getResults(patientList, allBlackFilePath);
-		
 
 		}
 
@@ -109,31 +106,27 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("D=" + dList.size());
-			
-			List<PatientData> xList = patientList.stream()
-					.filter(p ->  p.isInhibitorFormation())
+
+			List<PatientData> xList = patientList.stream().filter(p -> p.isInhibitorFormation())
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("observed inhibitor formation=" + xList.size());
-			
-			List<PatientData> yList = patientList.stream()
-					.filter(p ->  !p.isInhibitorFormation())
+
+			List<PatientData> yList = patientList.stream().filter(p -> !p.isInhibitorFormation())
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("observed no inhibitors=" + yList.size());
-			
-			List<PatientData> zList = patientList.stream()
-					.filter(p ->  !allBlack.contains(p.getVariant()))
+
+			List<PatientData> zList = patientList.stream().filter(p -> !allBlack.contains(p.getVariant()))
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("predicted inhibitor formation=" + zList.size());
-			
-			List<PatientData> tList = patientList.stream()
-					.filter(p ->  allBlack.contains(p.getVariant()))
+
+			List<PatientData> tList = patientList.stream().filter(p -> allBlack.contains(p.getVariant()))
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("predicted no inhibitors=" + tList.size());
-			
+
 		} catch (Exception ex) {
 
 		}
@@ -141,7 +134,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 	}
 
 	private static List<PatientData> readPatientFile() {
-		Set<String> uniqueList = new HashSet<>();
+		// Set<String> uniqueList = new HashSet<>();
 		Map<Integer, String> varMap = new HashMap<>();
 		List<PatientData> patientList = new ArrayList<>();
 

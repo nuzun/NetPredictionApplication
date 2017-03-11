@@ -81,6 +81,9 @@ public class AllBindersCsvFileGenerator {
 		case MHCII:
 			headerLine = "uniprot_code,allele,peptide,position,corePeptide,rank,mhcScore,IC50Score,binderStatus,source";
 			break;
+		default:
+			headerLine = "uniprot_code,allele,peptide,position,corePeptide,rank,mhcScore,IC50Score,binderStatus,source";
+			break;
 		}
 		
 		bw.write(headerLine);
