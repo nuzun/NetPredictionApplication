@@ -3,6 +3,7 @@ package uk.ac.bbk.cryst.netprediction.service;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +20,21 @@ public class NovelSurfaceResultsProcessor {
 	PropertiesHelper properties;
 	String novelSurfacesResultFilePath;
 	boolean proteomeScanningOn = false;
+	int alleleCounter = 0;
+	boolean onlyDR = true;
+	
+	
+	public boolean isOnlyDR() {
+		return onlyDR;
+	}
+
+	public void setOnlyDR(boolean onlyDR) {
+		this.onlyDR = onlyDR;
+	}
+
+	public int getAlleleCounter() {
+		return isOnlyDR() ? 14 : 25;
+	}
 
 	public boolean isProteomeScanningOn() {
 		return proteomeScanningOn;
@@ -59,25 +75,35 @@ public class NovelSurfaceResultsProcessor {
 		// G-22-C,DRB1_0101,WDYMQSDLGELPVDA,MQSDLGELP,449.39,null,null,null,450/grey
 		// T-49-A,DRB1_0101,,,,null,null,null,black
 
-		String[] DRAlleles = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701",
+		/*String[] DRAlleles = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701",
 				"DRB1_0802", "DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501", "DRB3_0101", "DRB4_0101",
 				"DRB5_0101" };
+		"HLA-DPA10103-DPB10201","HLA-DPA10103-DPB10401","HLA-DPA10201-DPB10101",
+		"HLA-DPA10201-DPB10501","HLA-DPA10301-DPB10402","HLA-DQA10101-DQB10501",
+		"HLA-DQA10102-DQB10602","HLA-DQA10301-DQB10302","HLA-DQA10401-DQB10402",
+		"HLA-DQA10501-DQB10201","HLA-DQA10501-DQB10301"*/
 
 		Map<String, Integer> variantBlacks = new LinkedHashMap<>();
 		Map<String, Integer> variantGreys = new LinkedHashMap<>();
 
-		for (String drAllele : DRAlleles) {
+		File root = new File(this.getNovelSurfacesResultFilePath());
+        FilenameFilter beginswith = new FilenameFilter()
+        {
+         public boolean accept(File directory, String filename) {
+              return filename.startsWith("novelSurfaces_");
+          }
+        };
 
-			File novelSurfaceResultsFile = new File(
-					this.getNovelSurfacesResultFilePath() + "//novelSurfaces_" + drAllele + ".csv");
+        File[] files = root.listFiles(beginswith);
+		
+		for (File novelSurfaceResultsFile: files) {
 			Scanner scanner = null;
-
+			if(isOnlyDR() && novelSurfaceResultsFile.getName().startsWith("novelSurfaces_HLA")){
+				continue;
+			}
+			
 			try {
 
-				if (!novelSurfaceResultsFile.exists()) {
-					System.out.println("Error: Missing file");
-					continue;
-				}
 				scanner = new Scanner(novelSurfaceResultsFile);
 				// Set the delimiter used in file
 				scanner.useDelimiter(",");
@@ -176,7 +202,7 @@ public class NovelSurfaceResultsProcessor {
 
 		int numberOfNoNovelGenotypes = 0;
 		for (String key : variantBlacks.keySet()) {
-			if (variantBlacks.get(key) == 14) {
+			if (variantBlacks.get(key) == this.getAlleleCounter()) {
 				System.out.println(key);
 				variantBlackList.add(key);
 				numberOfNoNovelGenotypes++;

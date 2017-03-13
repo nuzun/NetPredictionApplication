@@ -20,6 +20,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import uk.ac.bbk.cryst.netprediction.model.PatientData;
+import uk.ac.bbk.cryst.netprediction.service.NovelSurfaceResultsProcessor;
 import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
 
 public class PatientDataNovelSurfaceAnalyzerMain {
@@ -27,6 +28,17 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 	public static void main(String[] args) throws IOException {
 
 		try {
+			
+			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(true);
+			processor.setOnlyDR(true);
+			processor.readNovelSurfaceResults(1000f);
+			processor.readNovelSurfaceResults(500f);
+			processor.readNovelSurfaceResults(300f);
+			processor.readNovelSurfaceResults(200f);
+			processor.readNovelSurfaceResults(100f);
+			processor.readNovelSurfaceResults(50f);
+			
+			
 			List<PatientData> patientList = readPatientFile();
 
 			String allBlackFilePath = "data//output//variants_allBlack_1000.csv";
@@ -126,6 +138,9 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("predicted no inhibitors=" + tList.size());
+			
+			//String fishers = "challenge.df = matrix(c(" +  + "," +  + "," +  + "," +  + "), nrow = 2)";
+			//challenge.df = matrix(c(1,4,7,4), nrow = 2)
 
 		} catch (Exception ex) {
 
