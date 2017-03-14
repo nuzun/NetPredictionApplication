@@ -24,13 +24,15 @@ import uk.ac.bbk.cryst.netprediction.service.NovelSurfaceResultsProcessor;
 import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
 
 public class PatientDataNovelSurfaceAnalyzerMain {
+	
+	static String fishers = "";
 
 	public static void main(String[] args) throws IOException {
 
 		try {
 			
 			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(true);
-			processor.setOnlyDR(true);
+			processor.setOnlyDR(false);
 			processor.readNovelSurfaceResults(1000f);
 			processor.readNovelSurfaceResults(500f);
 			processor.readNovelSurfaceResults(300f);
@@ -64,6 +66,8 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			allBlackFilePath = "data//output//variants_allBlack_50.csv";
 			System.out.println(50);
 			getResults(patientList, allBlackFilePath);
+			
+			System.out.println(fishers);
 
 		}
 
@@ -139,7 +143,8 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			// printList(dList);
 			System.out.println("predicted no inhibitors=" + tList.size());
 			
-			//String fishers = "challenge.df = matrix(c(" +  + "," +  + "," +  + "," +  + "), nrow = 2)";
+			fishers += "challenge.df = matrix(c(" + aList.size()  + "," + bList.size() + "," + 
+														  dList.size()  + "," + cList.size()  + "), nrow = 2)\n";
 			//challenge.df = matrix(c(1,4,7,4), nrow = 2)
 
 		} catch (Exception ex) {
