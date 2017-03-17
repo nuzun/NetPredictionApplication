@@ -47,6 +47,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			System.out.println(1000);
 			getResults(patientList, allBlackFilePath);
 
+			
 			allBlackFilePath = "data//output//variants_allBlack_500.csv";
 			System.out.println(500);
 			getResults(patientList, allBlackFilePath);
@@ -66,6 +67,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			allBlackFilePath = "data//output//variants_allBlack_50.csv";
 			System.out.println(50);
 			getResults(patientList, allBlackFilePath);
+			
 			
 			System.out.println(fishers);
 
@@ -92,7 +94,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			List<PatientData> aList = patientList.stream()
 					.filter(p -> allBlack.contains(p.getVariant()) && !p.isInhibitorFormation())
 					.collect(Collectors.toList());
-			// printList(aList);
+			 //printList(aList);
 			System.out.println("A=" + aList.size());
 
 			// B: Patients with inhibitors having a missense mutation for which

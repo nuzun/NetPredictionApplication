@@ -98,9 +98,6 @@ public class NovelSurfaceResultsProcessor {
 		
 		for (File novelSurfaceResultsFile: files) {
 			Scanner scanner = null;
-			if(isOnlyDR() && novelSurfaceResultsFile.getName().startsWith("novelSurfaces_HLA")){
-				continue;
-			}
 			
 			try {
 
@@ -127,6 +124,11 @@ public class NovelSurfaceResultsProcessor {
 					String corePeptide_2 = elements[6];
 					String IC50_2 = elements[7];
 					String colour = elements[8];
+					
+					
+					if(isOnlyDR() && allele.startsWith("HLA")){
+						continue;
+					}
 
 					if (!colour.equals("black")) {
 						String[] items = colour.split("/");
@@ -134,20 +136,20 @@ public class NovelSurfaceResultsProcessor {
 						if (this.isProteomeScanningOn()) {
 							if (items[1].equals("grey")) {
 								if (variantBlacks.containsKey(variant)) {
-									variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+									variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
 								} else {
 									variantBlacks.put(variant, 1);
 								}
 
 								if (variantGreys.containsKey(variant)) {
-									variantGreys.put(variant, variantGreys.get(variant) + 1);
+									variantGreys.put(variant, variantGreys.get(variant).intValue() + 1);
 								} else {
 									variantGreys.put(variant, 1);
 								}
 							} else {
 								if (Float.valueOf(items[1]) >= threshold) {
 									if (variantBlacks.containsKey(variant)) {
-										variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+										variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
 									} else {
 										variantBlacks.put(variant, 1);
 									}
@@ -157,7 +159,7 @@ public class NovelSurfaceResultsProcessor {
 						else {
 							if (items[1].equals("grey")) {
 								if (variantGreys.containsKey(variant)) {
-									variantGreys.put(variant, variantGreys.get(variant) + 1);
+									variantGreys.put(variant, variantGreys.get(variant).intValue() + 1);
 								} else {
 									variantGreys.put(variant, 1);
 								}
@@ -165,7 +167,7 @@ public class NovelSurfaceResultsProcessor {
 
 							if (Float.valueOf(items[0]) >= threshold) {
 								if (variantBlacks.containsKey(variant)) {
-									variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+									variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
 								} else {
 									variantBlacks.put(variant, 1);
 								}
@@ -176,7 +178,7 @@ public class NovelSurfaceResultsProcessor {
 					}//if colour not black
 					else{
 						if (variantBlacks.containsKey(variant)) {
-							variantBlacks.put(variant, variantBlacks.get(variant) + 1);
+							variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
 						} else {
 							variantBlacks.put(variant, 1);
 						}
@@ -202,7 +204,7 @@ public class NovelSurfaceResultsProcessor {
 
 		int numberOfNoNovelGenotypes = 0;
 		for (String key : variantBlacks.keySet()) {
-			if (variantBlacks.get(key) == this.getAlleleCounter()) {
+			if (variantBlacks.get(key).intValue() == this.getAlleleCounter()) {
 				System.out.println(key);
 				variantBlackList.add(key);
 				numberOfNoNovelGenotypes++;
