@@ -19,62 +19,38 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import uk.ac.bbk.cryst.netprediction.common.PredictionType;
+import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.model.PatientData;
 import uk.ac.bbk.cryst.netprediction.service.NovelSurfaceResultsProcessor;
 import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
 
 public class PatientDataNovelSurfaceAnalyzerMain {
 	
-	static String fishers = "";
+	static String fishersSimple = "";
+	static String fishersComplex = "";
+	static PropertiesHelper properties = new PropertiesHelper();
+	static List<PatientData> patientList = new ArrayList<>();
+	static List<String> variants = new ArrayList<>();
+
 
 	public static void main(String[] args) throws IOException {
 
 		try {
-			
-			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(true);
-			processor.setOnlyDR(false);
-			processor.readNovelSurfaceResults(1000f);
-			processor.readNovelSurfaceResults(500f);
-			processor.readNovelSurfaceResults(300f);
-			processor.readNovelSurfaceResults(200f);
-			processor.readNovelSurfaceResults(100f);
-			processor.readNovelSurfaceResults(50f);
-			
-			
-			List<PatientData> patientList = readPatientFile();
+			patientList = readNonSeverePatientFile();
+			variants = readNonSevereMutationFile();
 
-			String allBlackFilePath = "data//output//variants_allBlack_1000.csv";
-			System.out.println(1000);
-			getResults(patientList, allBlackFilePath);
-
+			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(false,false,PredictionType.MHCIIPAN31);
+			processor.readNovelSurfaceResults();
 			
-			allBlackFilePath = "data//output//variants_allBlack_500.csv";
-			System.out.println(500);
-			getResults(patientList, allBlackFilePath);
-
-			allBlackFilePath = "data//output//variants_allBlack_300.csv";
-			System.out.println(300);
-			getResults(patientList, allBlackFilePath);
-
-			allBlackFilePath = "data//output//variants_allBlack_200.csv";
-			System.out.println(200);
-			getResults(patientList, allBlackFilePath);
-
-			allBlackFilePath = "data//output//variants_allBlack_100.csv";
-			System.out.println(100);
-			getResults(patientList, allBlackFilePath);
-
-			allBlackFilePath = "data//output//variants_allBlack_50.csv";
-			System.out.println(50);
-			getResults(patientList, allBlackFilePath);
-			
-			
-			System.out.println(fishers);
+			printCategoricalNumbersSimple();
+			printCategoricalNumbersComplex();
+			printVariousStatistics();
 
 		}
 
 		catch (Exception e) {
-
+			throw e;
 		}
 
 		finally {
@@ -83,9 +59,63 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 
 	}
 
-	private static void getResults(List<PatientData> patientList, String filePath) {
+	private static void printVariousStatistics() throws IOException {
+		
+		Map<String,Integer> positionMap = new HashMap<>();
+		
+		for(String variant:variants){
+			String[] arr = variant.split("-");
+			String pos = arr[1];
+			if(positionMap.containsKey(pos)){
+				positionMap.put(pos, positionMap.get(pos).intValue()+1);
+			}
+			else{
+				positionMap.put(pos, 1);
+			}
+		}
+		
+		int counter = 0;
+		for(String pos:positionMap.keySet()){
+			if(positionMap.get(pos) > 1){
+				counter++;
+			}
+		}
+		
+		System.out.println("Number of variant positions with more than one mutation:" + counter);
+		
+		List<PatientData> list = patientList.stream()
+				.filter(p -> p.isInhibitorFormation())
+				.collect(Collectors.toList());
+		System.out.println("Number of patients with inhibitors in the patient data:" + list.size());
+		
+		//System.out.println("Variants from patient data with inhibitors:");
+		//for(PatientData p : list){
+		//	System.out.println(p.getVariant());
+		//}
+		
+	}
+	private static void printCategoricalNumbersComplex() {
+		// TODO Auto-generated method stub
+		Float[] thresholds = {1000f,500f,300f,200f,100f,50f};
+		
+		for(Float threshold : thresholds){
+			String allBlackFilePath = "data//output//variants_allBlack_"+ threshold.intValue() +".csv";
+			System.out.println(threshold.intValue());
+			calculateCategoricalNumbersComplex(patientList, allBlackFilePath);
+		}
+		
+		System.out.println(fishersComplex);
+		
+	}
+	
+	
+
+	private static void calculateCategoricalNumbersComplex(List<PatientData> patientList, String allBlackFilePath) {
+		// TODO Auto-generated method stub
+		
 		try {
-			File allBlackFile = new File(filePath);
+			
+			File allBlackFile = new File(allBlackFilePath);
 			final List<String> allBlack = readAllBlackFile(allBlackFile);
 
 			// A: Patients without inhibitors having a missense mutation for
@@ -125,6 +155,84 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			// printList(dList);
 			System.out.println("D=" + dList.size());
 
+			
+			fishersComplex += "challenge.df = matrix(c(" + aList.size()  + "," + bList.size() + "," + 
+														  dList.size()  + "," + cList.size()  + "), nrow = 2)\n";
+			//challenge.df = matrix(c(1,4,7,4), nrow = 2)
+			//fisher.test(challenge.df)
+			//chisq.test(challenge.df,correct=FALSE)
+
+		} catch (Exception ex) {
+
+		}
+		
+	}
+
+	private static void printCategoricalNumbersSimple() {		
+		Float[] thresholds = {1000f,500f,300f,200f,100f,50f};
+		
+		for(Float threshold : thresholds){
+			String allBlackFilePath = "data//output//variants_allBlack_"+ threshold.intValue() +".csv";
+			System.out.println(threshold.intValue());
+			try {
+				calculateCategoricalNumbersSimple(patientList, allBlackFilePath);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		System.out.println(fishersSimple);
+		
+	}
+
+
+
+	private static void calculateCategoricalNumbersSimple(List<PatientData> patientList, String allBlackFilePath) throws Exception {
+		try {
+			
+			File allBlackFile = new File(allBlackFilePath);
+			final List<String> allBlack = readAllBlackFile(allBlackFile);
+
+			// A: Patients without inhibitors having a missense mutation for
+			// which we predict no risk of
+			// inhibitor development with any of the 14 HLA alleles in our set.
+			List<PatientData> aList = patientList.stream()
+					.filter(p -> allBlack.contains(p.getVariant()) && !p.isInhibitorFormation())
+					.collect(Collectors.toList());
+			 //printList(aList);
+			System.out.println("A=" + aList.size());
+
+			// B: Patients with inhibitors having a missense mutation for which
+			// we predict no risk of inhibitor
+			// development with any of the 14 HLA alleles in our set.
+			List<PatientData> bList = patientList.stream()
+					.filter(p -> allBlack.contains(p.getVariant()) && p.isInhibitorFormation())
+					.collect(Collectors.toList());
+			// printList(bList);
+			System.out.println("B=" + bList.size());
+
+			// C: Patients with inhibitors having a missense mutation for which
+			// we predict a risk of inhibitor
+			// development with at least one of the 14 HLA alleles in our set.
+			List<PatientData> cList = patientList.stream()
+					.filter(p -> !allBlack.contains(p.getVariant()) && p.isInhibitorFormation())
+					.collect(Collectors.toList());
+			// printList(cList);
+			System.out.println("C=" + cList.size());
+
+			// D: Patients without inhibitors having a missense mutation for
+			// which we predict a risk of
+			// inhibitor development with at least one of the 14 HLA alleles in
+			// our set.
+			List<PatientData> dList = patientList.stream()
+					.filter(p -> !allBlack.contains(p.getVariant()) && !p.isInhibitorFormation())
+					.collect(Collectors.toList());
+			// printList(dList);
+			System.out.println("D=" + dList.size());
+
+			
+			/* observed vs predicted
 			List<PatientData> xList = patientList.stream().filter(p -> p.isInhibitorFormation())
 					.collect(Collectors.toList());
 			// printList(dList);
@@ -144,18 +252,22 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("predicted no inhibitors=" + tList.size());
+			 
+			 */
 			
-			fishers += "challenge.df = matrix(c(" + aList.size()  + "," + bList.size() + "," + 
+			fishersSimple += "challenge.df = matrix(c(" + aList.size()  + "," + bList.size() + "," + 
 														  dList.size()  + "," + cList.size()  + "), nrow = 2)\n";
 			//challenge.df = matrix(c(1,4,7,4), nrow = 2)
+			//fisher.test(challenge.df)
+			//chisq.test(challenge.df,correct=FALSE)
 
 		} catch (Exception ex) {
-
+			throw ex;
 		}
 
 	}
 
-	private static List<PatientData> readPatientFile() {
+	private static List<PatientData> readNonSeverePatientFile() {
 		// Set<String> uniqueList = new HashSet<>();
 		Map<Integer, String> varMap = new HashMap<>();
 		List<PatientData> patientList = new ArrayList<>();
@@ -223,7 +335,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 				}
 			}
 
-			// writeToCsvFile(patientList);
+			// generateCustomPatientCsvFile(patientList);
 		}
 
 		catch (Exception e) {
@@ -242,6 +354,26 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 		}
 		return patientList;
 
+	}
+	
+	private static List<String> readNonSevereMutationFile() throws IOException {
+
+		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
+		File mutationFile = new File(mutationFileFullPath);
+		String line = "";
+
+		BufferedReader br = new BufferedReader(new FileReader(mutationFile));
+		try {
+			while ((line = br.readLine()) != null && !line.trim().equals("")) {
+				variants.add(line.trim());
+			}
+
+			br.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return variants;
 	}
 
 	private static void printList(List<PatientData> list) {
@@ -268,7 +400,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 		return allBlack;
 	}
 
-	private static void writeToCsvFile(List<PatientData> patientList) {
+	private static void generateCustomPatientCsvFile(List<PatientData> patientList) {
 		String csvFile = "data//output//custom_factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv";
 		try {
 			FileWriter writer = new FileWriter(csvFile);
