@@ -1,7 +1,9 @@
 package uk.ac.bbk.cryst.netprediction.service;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -20,15 +22,15 @@ import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
 
 public class NovelSurfaceResultsProcessor {
 
-	PropertiesHelper properties;
+	static PropertiesHelper properties;
 	String novelSurfacesResultFilePath;
 	boolean proteomeScanningOn = false;
 	int alleleCounter = 0;
 	boolean onlyDR = true;
 	PredictionType predictionType;
-	
-	
-	
+	static List<String> variants = new ArrayList<>();
+
+		
 	public PredictionType getPredictionType() {
 		return predictionType;
 	}
@@ -92,6 +94,8 @@ public class NovelSurfaceResultsProcessor {
 		this.setProteomeScanningOn(proteomeScanning);
 		this.setOnlyDR(onlyDR);
 		this.setPredictionType(predictionType);
+		
+		variants = readNonSevereMutationFile();
 		
 	}
 
@@ -382,10 +386,54 @@ public class NovelSurfaceResultsProcessor {
 			}
 
 		} // for drAlleles
-
 		
-		List<BlackBox> variantOnly1 = variantBlacks.stream().filter(p-> (Arrays.asList(set1)).contains(p.getAllele()))
-				.collect(Collectors.toList());
+		for(String variant : variants){
+			boolean isAtRisk = false;
+			List<BlackBox> variantOnly1 = variantBlacks.stream()
+					.filter(p-> (Arrays.asList(set1)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
 			
+			List<BlackBox> variantOnly2 = variantBlacks.stream()
+					.filter(p-> (Arrays.asList(set2)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+			
+			List<BlackBox> variantOnly3 = variantBlacks.stream()
+					.filter(p-> (Arrays.asList(set3)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+			
+			List<BlackBox> variantOnly4 = variantBlacks.stream()
+					.filter(p-> (Arrays.asList(set4)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+			
+			if(variantOnly1.size() < 2 || variantOnly2.size() < 2 || variantOnly3.size() < 2 || variantOnly4.size() < 2){
+				isAtRisk = true;//calculate that variant
+			}
+			else{
+				//exclude the patients with that variant
+				//for only the ones with risk calculation or for all???
+			}
+			
+		}
+			
+	}
+	
+	private static List<String> readNonSevereMutationFile() throws IOException {
+
+		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
+		File mutationFile = new File(mutationFileFullPath);
+		String line = "";
+
+		BufferedReader br = new BufferedReader(new FileReader(mutationFile));
+		try {
+			while ((line = br.readLine()) != null && !line.trim().equals("")) {
+				variants.add(line.trim());
+			}
+
+			br.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return variants;
 	}
 }
