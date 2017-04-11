@@ -1,9 +1,17 @@
 package uk.ac.bbk.cryst.netprediction.model;
 
-public class BlackBox {
+public class HeatMapBox {
 
 	String allele;
 	String variant;
+	String colour;
+	
+	public String getColour() {
+		return colour;
+	}
+	public void setColour(String colour) {
+		this.colour = colour;
+	}
 	public String getAllele() {
 		return allele;
 	}
@@ -16,10 +24,11 @@ public class BlackBox {
 	public void setVariant(String variant) {
 		this.variant = variant;
 	}
-	public BlackBox(String allele, String variant) {
+	public HeatMapBox(String allele, String variant,String colour) {
 		super();
 		this.allele = allele;
 		this.variant = variant;
+		this.colour = colour;
 	}
 	
 	

@@ -1,36 +1,33 @@
 package uk.ac.bbk.cryst.netprediction.service;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
-import uk.ac.bbk.cryst.netprediction.model.BlackBox;
+import uk.ac.bbk.cryst.netprediction.model.HeatMapBox;
 import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
+import uk.ac.bbk.cryst.netprediction.util.NovelSurfaceProcessorHelper;
 
 public class NovelSurfaceResultsProcessor {
 
-	static PropertiesHelper properties;
+	PropertiesHelper properties;
+	NovelSurfaceProcessorHelper helper;
 	String novelSurfacesResultFilePath;
 	boolean proteomeScanningOn = false;
 	int alleleCounter = 0;
 	boolean onlyDR = true;
 	PredictionType predictionType;
-	static List<String> variants = new ArrayList<>();
 
-		
+	List<HeatMapBox> boxList = new ArrayList<>();
+
 	public PredictionType getPredictionType() {
 		return predictionType;
 	}
@@ -63,10 +60,6 @@ public class NovelSurfaceResultsProcessor {
 		return properties;
 	}
 
-	public void setProperties(PropertiesHelper properties) {
-		this.properties = properties;
-	}
-
 	public String getNovelSurfacesResultFilePath() {
 		return novelSurfacesResultFilePath;
 	}
@@ -75,12 +68,13 @@ public class NovelSurfaceResultsProcessor {
 		this.novelSurfacesResultFilePath = novelSurfacesResultFilePath;
 	}
 
-	public NovelSurfaceResultsProcessor(boolean proteomeScanning, boolean onlyDR,PredictionType predictionType) throws IOException {
+	public NovelSurfaceResultsProcessor(boolean proteomeScanning, boolean onlyDR, PredictionType predictionType)
+			throws IOException {
 		super();
-
-		properties = new PropertiesHelper();
+		this.properties = new PropertiesHelper();
+		this.helper = new NovelSurfaceProcessorHelper();
 		
-		switch(predictionType){
+		switch (predictionType) {
 		case MHCII:
 			this.setNovelSurfacesResultFilePath(properties.getValue("novelSurfacesResultFilePathMHCII"));
 			break;
@@ -90,54 +84,30 @@ public class NovelSurfaceResultsProcessor {
 		default:
 			break;
 		}
-		
+
 		this.setProteomeScanningOn(proteomeScanning);
 		this.setOnlyDR(onlyDR);
 		this.setPredictionType(predictionType);
+
 		
-		variants = readNonSevereMutationFile();
 		
+		readNovelSurfaceResultFiles();
+
 	}
 
-	public void readNovelSurfaceResults(){
-		Float[] thresholds = {1000f,500f,300f,200f,100f,50f};
-		for(Float threshold : thresholds){
-			readNovelSurfaceResults(threshold);
-		}
-	}
-	
-	public void readNovelSurfaceResults(Float threshold) {
-
-		// Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour
-		// R-3-I,DRB1_0101,CLLRFCFSATRRYYL,FCFSATRRY,11.78,CLLRFCFSATRRYYL,FCFSATRRY,11.78,12/12
-		// G-22-C,DRB1_0101,WDYMQSDLGELPVDA,MQSDLGELP,449.39,null,null,null,450/grey
-		// T-49-A,DRB1_0101,,,,null,null,null,black
-
-		/*String[] DRAlleles = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701",
-				"DRB1_0802", "DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501", "DRB3_0101", "DRB4_0101",
-				"DRB5_0101" };
-		"HLA-DPA10103-DPB10201","HLA-DPA10103-DPB10401","HLA-DPA10201-DPB10101",
-		"HLA-DPA10201-DPB10501","HLA-DPA10301-DPB10402","HLA-DQA10101-DQB10501",
-		"HLA-DQA10102-DQB10602","HLA-DQA10301-DQB10302","HLA-DQA10401-DQB10402",
-		"HLA-DQA10501-DQB10201","HLA-DQA10501-DQB10301"*/
-		
-		
-		Map<String, Integer> variantBlacks = new LinkedHashMap<>();
-		Map<String, Integer> variantGreys = new LinkedHashMap<>();
-
+	private void readNovelSurfaceResultFiles() {
 		File root = new File(this.getNovelSurfacesResultFilePath());
-        FilenameFilter beginswith = new FilenameFilter()
-        {
-         public boolean accept(File directory, String filename) {
-              return filename.startsWith("novelSurfaces_");
-          }
-        };
+		FilenameFilter beginswith = new FilenameFilter() {
+			public boolean accept(File directory, String filename) {
+				return filename.startsWith("novelSurfaces_");
+			}
+		};
 
-        File[] files = root.listFiles(beginswith);
-		
-		for (File novelSurfaceResultsFile: files) {
+		File[] files = root.listFiles(beginswith);
+
+		for (File novelSurfaceResultsFile : files) {
 			Scanner scanner = null;
-			
+
 			try {
 
 				scanner = new Scanner(novelSurfaceResultsFile);
@@ -163,103 +133,162 @@ public class NovelSurfaceResultsProcessor {
 					String corePeptide_2 = elements[6];
 					String IC50_2 = elements[7];
 					String colour = elements[8];
-					
-		
-					
-					if(isOnlyDR() && allele.startsWith("HLA")){
-						continue;
-					}
 
-					if (!colour.equals("black")) {
-						String[] items = colour.split("/");
-
-						if (this.isProteomeScanningOn()) {
-							if (items[1].equals("grey")) {
-								if (variantBlacks.containsKey(variant)) {
-									variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
-								} else {
-									variantBlacks.put(variant, 1);
-								}
-
-								if (variantGreys.containsKey(variant)) {
-									variantGreys.put(variant, variantGreys.get(variant).intValue() + 1);
-								} else {
-									variantGreys.put(variant, 1);
-								}
-							} else {
-								if (Float.valueOf(items[1]) >= threshold) {
-									if (variantBlacks.containsKey(variant)) {
-										variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
-									} else {
-										variantBlacks.put(variant, 1);
-									}
-								}
-							}
-						} // if isProteomeScanningOn
-						else {
-							if (items[1].equals("grey")) {
-								if (variantGreys.containsKey(variant)) {
-									variantGreys.put(variant, variantGreys.get(variant).intValue() + 1);
-								} else {
-									variantGreys.put(variant, 1);
-								}
-							}
-
-							if (Float.valueOf(items[0]) >= threshold) {
-								if (variantBlacks.containsKey(variant)) {
-									variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
-								} else {
-									variantBlacks.put(variant, 1);
-								}
-							}
-
-						}
-
-					}//if colour not black
-					else{
-						if (variantBlacks.containsKey(variant)) {
-							variantBlacks.put(variant, variantBlacks.get(variant).intValue() + 1);
-						} else {
-							variantBlacks.put(variant, 1);
-						}
-					}
+					HeatMapBox box = new HeatMapBox(allele, variant, colour);
+					boxList.add(box);
 
 				}
+			}
 
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			catch (Exception ex) {
+
 			} finally {
 				if (scanner != null) {
 					scanner.close();
 				}
 			}
+		}
+	}
 
-		} // for drAlleles
+	public void createVariantFiles() {
+		Float[] thresholds = { 1000f, 500f, 300f, 200f, 100f, 50f };
+
+		for (Float threshold : thresholds) {
+			System.out.println("Threshold:" + threshold);
+			createVariantFile(threshold);
+		}
+	}
+
+	public void createVariantFile(Float threshold) {
+
+		// Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour
+		// R-3-I,DRB1_0101,CLLRFCFSATRRYYL,FCFSATRRY,11.78,CLLRFCFSATRRYYL,FCFSATRRY,11.78,12/12
+		// G-22-C,DRB1_0101,WDYMQSDLGELPVDA,MQSDLGELP,449.39,null,null,null,450/grey
+		// T-49-A,DRB1_0101,,,,null,null,null,black
+
+		/*
+		 * String[] DRAlleles = { "DRB1_0101", "DRB1_0301", "DRB1_0401",
+		 * "DRB1_0404", "DRB1_0405", "DRB1_0701", "DRB1_0802", "DRB1_0901",
+		 * "DRB1_1101", "DRB1_1302", "DRB1_1501", "DRB3_0101", "DRB4_0101",
+		 * "DRB5_0101" }; "HLA-DPA10103-DPB10201","HLA-DPA10103-DPB10401",
+		 * "HLA-DPA10201-DPB10101",
+		 * "HLA-DPA10201-DPB10501","HLA-DPA10301-DPB10402",
+		 * "HLA-DQA10101-DQB10501",
+		 * "HLA-DQA10102-DQB10602","HLA-DQA10301-DQB10302",
+		 * "HLA-DQA10401-DQB10402",
+		 * "HLA-DQA10501-DQB10201","HLA-DQA10501-DQB10301"
+		 */
+
+		List<HeatMapBox> variantBlacks = new ArrayList<>();
+		List<HeatMapBox> variantGreys = new ArrayList<>();
+
+		for (HeatMapBox box : boxList) {
+
+			if (isOnlyDR() && box.getAllele().startsWith("HLA")) {
+				continue;
+			}
+
+			if (!box.getColour().equals("black")) {
+				String[] items = box.getColour().split("/");
+
+				if (this.isProteomeScanningOn()) {
+					if (items[1].equals("grey")) {
+						variantBlacks.add(box);
+						variantGreys.add(box);
+					} else {
+						if (Float.valueOf(items[1]) >= threshold) {
+							variantBlacks.add(box);
+						}
+					}
+				} // if isProteomeScanningOn
+				else {
+					if (items[1].equals("grey")) {
+						variantGreys.add(box);
+					}
+
+					if (Float.valueOf(items[0]) >= threshold) {
+						variantBlacks.add(box);
+
+					}
+				}
+
+			} // if colour not black
+			else {
+				variantBlacks.add(box);
+			}
+
+		}
+
+		writeToVariantsCsvFile(variantBlacks, threshold);
+
+	}
+
+	private void writeToVariantsCsvFile(List<HeatMapBox> variantBlacks, Float threshold) {
+		String blackCsvFile = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
+		String excludeCsvFile = "data//output//variants_exclude_" + threshold.intValue() + ".csv";
+
+		String[] set1 = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701", "DRB1_0802",
+				"DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501" };
+
+		String[] set2 = { "DRB3_0101", "DRB4_0101", "DRB5_0101" };
+
+		//HLA-DPA101-DPB10401
+		String[] set3 = { "HLA-DPA10103-DPB10201", "HLA-DPA10103-DPB10401", "HLA-DPA101-DPB10401","HLA-DPA10201-DPB10101",
+				"HLA-DPA10201-DPB10501", "HLA-DPA10301-DPB10402" };
+
+		String[] set4 = { "HLA-DQA10101-DQB10501", "HLA-DQA10102-DQB10602", "HLA-DQA10301-DQB10302",
+				"HLA-DQA10401-DQB10402", "HLA-DQA10501-DQB10201", "HLA-DQA10501-DQB10301" };
 
 		// print all black: genotypes with no novel surfaces: no risk of
 		// inhibitor formation
-		// copy them to variants_allBlack.csv
 		List<String> variantBlackList = new ArrayList<>();
-		int numberOfNoNovelGenotypes = 0;
-		for (String key : variantBlacks.keySet()) {
-			if (variantBlacks.get(key).intValue() == this.getAlleleCounter()) {
-				//System.out.println(key);
-				variantBlackList.add(key);
-				numberOfNoNovelGenotypes++;
+		List<String> variantExcludeList = new ArrayList<>();
+
+		List<String> variants = helper.getVariants();
+		
+		for (String variant : variants) {
+			List<HeatMapBox> filteredList = variantBlacks.stream().filter(p -> variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+
+			if (filteredList.size() == this.getAlleleCounter()) {
+				variantBlackList.add(variant);
+			}
+
+			List<HeatMapBox> variantOnly1 = variantBlacks.stream()
+					.filter(p -> (Arrays.asList(set1)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+
+			List<HeatMapBox> variantOnly2 = variantBlacks.stream()
+					.filter(p -> (Arrays.asList(set2)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+
+			List<HeatMapBox> variantOnly3 = variantBlacks.stream()
+					.filter(p -> (Arrays.asList(set3)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+
+			List<HeatMapBox> variantOnly4 = variantBlacks.stream()
+					.filter(p -> (Arrays.asList(set4)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+
+			if (variantOnly1.size() < 2 || variantOnly2.size() < 2 || variantOnly3.size() < 2
+					|| variantOnly4.size() < 2) {
+				// calculate
+			} else {
+				variantExcludeList.add(variant);
+				// exclude the patients with that variant
+				// for only the ones with risk calculation or for all???
 			}
 		}
 
-		generateAllBlackVariantsCsvFile(variantBlackList, threshold);
-		System.out.println("Number of Novel Surfaces:" + numberOfNoNovelGenotypes);
-	
-	}
+		System.out.println("Number of Novel Surfaces:" + variantBlackList.size());
+		System.out.println("Number of Exclude Surfaces:" + variantExcludeList.size());
 
-	private void generateAllBlackVariantsCsvFile(List<String> variantBlackList, Float threshold) {
-		String csvFile = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
 		try {
-			FileWriter writer = new FileWriter(csvFile);
+			FileWriter writer = new FileWriter(blackCsvFile);
+			FileWriter writer2 = new FileWriter(excludeCsvFile);
+
 			CSVUtils.writeLine(writer, Arrays.asList("Variant"));
+			CSVUtils.writeLine(writer2, Arrays.asList("Variant"));
 
 			for (String variant : variantBlackList) {
 				List<String> list = new ArrayList<>();
@@ -267,8 +296,17 @@ public class NovelSurfaceResultsProcessor {
 				CSVUtils.writeLine(writer, list);
 			}
 
+			for (String variant : variantExcludeList) {
+				List<String> list = new ArrayList<>();
+				list.add(variant);
+				CSVUtils.writeLine(writer2, list);
+			}
+
 			writer.flush();
 			writer.close();
+
+			writer2.flush();
+			writer2.close();
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -276,164 +314,7 @@ public class NovelSurfaceResultsProcessor {
 		}
 
 	}
+
 	
-	public void generateExcludeVariants(Float threshold){
-		
-		// Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour
-		// R-3-I,DRB1_0101,CLLRFCFSATRRYYL,FCFSATRRY,11.78,CLLRFCFSATRRYYL,FCFSATRRY,11.78,12/12
-		// G-22-C,DRB1_0101,WDYMQSDLGELPVDA,MQSDLGELP,449.39,null,null,null,450/grey
-		// T-49-A,DRB1_0101,,,,null,null,null,black
-
-		String[] set1 = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701",
-				"DRB1_0802", "DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501"};
-		
-		String[] set2 = { "DRB3_0101", "DRB4_0101", "DRB5_0101"};
-		
-		String[] set3 = { "HLA-DPA10103-DPB10201","HLA-DPA10103-DPB10401","HLA-DPA10201-DPB10101",
-				"HLA-DPA10201-DPB10501","HLA-DPA10301-DPB10402" };
-		
-		String[] set4 = { "HLA-DQA10101-DQB10501","HLA-DQA10102-DQB10602","HLA-DQA10301-DQB10302",
-				"HLA-DQA10401-DQB10402","HLA-DQA10501-DQB10201","HLA-DQA10501-DQB10301"};
-		
-		
-		List<BlackBox> variantBlacks = new ArrayList<>();
-		List<BlackBox> variantGreys = new ArrayList<>();
-		
-
-		File root = new File(this.getNovelSurfacesResultFilePath());
-        FilenameFilter beginswith = new FilenameFilter()
-        {
-         public boolean accept(File directory, String filename) {
-              return filename.startsWith("novelSurfaces_");
-          }
-        };
-
-        File[] files = root.listFiles(beginswith);
-		
-		for (File novelSurfaceResultsFile: files) {
-			Scanner scanner = null;
-			
-			try {
-
-				scanner = new Scanner(novelSurfaceResultsFile);
-				// Set the delimiter used in file
-				scanner.useDelimiter(",");
-				scanner.nextLine();
-
-				while (scanner.hasNext()) {
-					String row = scanner.nextLine();
-					String[] elements = row.split(",");
-
-					if (elements.length != 9) {
-						System.out.println("Error: Missing data");
-						return;
-					}
-
-					String variant = elements[0];
-					String allele = elements[1];
-					String peptide_1 = elements[2];
-					String corePeptide_1 = elements[3];
-					String IC50_1 = elements[4];
-					String peptide_2 = elements[5];
-					String corePeptide_2 = elements[6];
-					String IC50_2 = elements[7];
-					String colour = elements[8];
-					
-					BlackBox box = new BlackBox(allele, variant);
-					
-					if(isOnlyDR() && allele.startsWith("HLA")){
-						continue;
-					}
-
-					if (!colour.equals("black")) {
-						String[] items = colour.split("/");
-
-						if (this.isProteomeScanningOn()) {
-							if (items[1].equals("grey")) {
-								variantBlacks.add(box);
-								variantGreys.add(box);
-							} else {
-								if (Float.valueOf(items[1]) >= threshold) {
-									variantBlacks.add(box);
-								}
-							}
-						} // if isProteomeScanningOn
-						else {
-							if (items[1].equals("grey")) {
-								variantGreys.add(box);
-							}
-
-							if (Float.valueOf(items[0]) >= threshold) {
-								variantBlacks.add(box);
-
-							}
-						}
-
-					}//if colour not black
-					else{
-						variantBlacks.add(box);
-					}
-
-				}
-
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				if (scanner != null) {
-					scanner.close();
-				}
-			}
-
-		} // for drAlleles
-		
-		for(String variant : variants){
-			boolean isAtRisk = false;
-			List<BlackBox> variantOnly1 = variantBlacks.stream()
-					.filter(p-> (Arrays.asList(set1)).contains(p.getAllele()) && variant.equals(p.getVariant()))
-					.collect(Collectors.toList());
-			
-			List<BlackBox> variantOnly2 = variantBlacks.stream()
-					.filter(p-> (Arrays.asList(set2)).contains(p.getAllele()) && variant.equals(p.getVariant()))
-					.collect(Collectors.toList());
-			
-			List<BlackBox> variantOnly3 = variantBlacks.stream()
-					.filter(p-> (Arrays.asList(set3)).contains(p.getAllele()) && variant.equals(p.getVariant()))
-					.collect(Collectors.toList());
-			
-			List<BlackBox> variantOnly4 = variantBlacks.stream()
-					.filter(p-> (Arrays.asList(set4)).contains(p.getAllele()) && variant.equals(p.getVariant()))
-					.collect(Collectors.toList());
-			
-			if(variantOnly1.size() < 2 || variantOnly2.size() < 2 || variantOnly3.size() < 2 || variantOnly4.size() < 2){
-				isAtRisk = true;//calculate that variant
-			}
-			else{
-				//exclude the patients with that variant
-				//for only the ones with risk calculation or for all???
-			}
-			
-		}
-			
-	}
 	
-	private static List<String> readNonSevereMutationFile() throws IOException {
-
-		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
-		File mutationFile = new File(mutationFileFullPath);
-		String line = "";
-
-		BufferedReader br = new BufferedReader(new FileReader(mutationFile));
-		try {
-			while ((line = br.readLine()) != null && !line.trim().equals("")) {
-				variants.add(line.trim());
-			}
-
-			br.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-		return variants;
-	}
 }
