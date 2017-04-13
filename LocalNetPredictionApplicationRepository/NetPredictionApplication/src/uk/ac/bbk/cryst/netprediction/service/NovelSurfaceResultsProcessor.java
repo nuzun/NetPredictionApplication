@@ -1,19 +1,24 @@
 package uk.ac.bbk.cryst.netprediction.service;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.model.HeatMapBox;
 import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
+import uk.ac.bbk.cryst.netprediction.util.FileHelper;
 import uk.ac.bbk.cryst.netprediction.util.NovelSurfaceProcessorHelper;
 
 public class NovelSurfaceResultsProcessor {
@@ -85,12 +90,10 @@ public class NovelSurfaceResultsProcessor {
 			break;
 		}
 
+		this.setPredictionType(predictionType);
 		this.setProteomeScanningOn(proteomeScanning);
 		this.setOnlyDR(onlyDR);
-		this.setPredictionType(predictionType);
 
-		
-		
 		readNovelSurfaceResultFiles();
 
 	}
@@ -148,6 +151,58 @@ public class NovelSurfaceResultsProcessor {
 				}
 			}
 		}
+	}
+	
+	public void createHeatMapFiles(boolean proteomeScan) throws IOException{
+		//write first line all variants comma separated
+		StringJoiner content = new StringJoiner(",");
+		String newLine = "\n";
+		content.add("allele");
+		for(String variant : helper.getVariants()){
+			content.add(variant);
+		}
+		String fullContent = content.toString() + newLine;
+		
+
+		//then for each variant and for each allele 
+		//find the box and examine the colour
+		//item[0] for prot scan off
+		//item[1] for prot scan on, could be grey (1500)
+		//could also be black (2000)
+		
+		for(String allele : helper.readAlleleFile(this.getPredictionType())){
+			content = new StringJoiner(",");
+			content.add(allele);
+			
+			for(String variant : helper.getVariants()){
+				List<HeatMapBox> filteredList = boxList.stream().filter(p -> variant.equals(p.getVariant()) 
+						&& allele.equals(p.getAllele()))
+						.collect(Collectors.toList());
+				HeatMapBox box = filteredList.get(0);
+				
+				if(!box.getColour().equals("black")){
+					String[] items = box.getColour().split("/");
+					if(proteomeScan && items[1].equals("grey")){
+						content.add(String.valueOf(2001f));
+					}
+					else if(proteomeScan && !items[1].equals("grey") ){
+						content.add(items[1]);
+					}
+					else{
+						content.add(items[0]);
+					}
+				}
+				else{
+					//black
+					content.add(String.valueOf(1001f));
+				}
+			}
+			fullContent+=content.toString()+newLine;
+		}
+		
+		File file = new File("data//output//heatmap.csv");
+		FileHelper.writeToFile(file, fullContent);
+		
 	}
 
 	public void createVariantFiles() {
@@ -225,14 +280,14 @@ public class NovelSurfaceResultsProcessor {
 
 	private void writeToVariantsCsvFile(List<HeatMapBox> variantBlacks, Float threshold) {
 		String blackCsvFile = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
-		String excludeCsvFile = "data//output//variants_exclude_" + threshold.intValue() + ".csv";
+		String includeCsvFile = "data//output//variants_include_" + threshold.intValue() + ".csv";
 
 		String[] set1 = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701", "DRB1_0802",
 				"DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501" };
 
 		String[] set2 = { "DRB3_0101", "DRB4_0101", "DRB5_0101" };
 
-		//HLA-DPA101-DPB10401
+		//HLA-DPA101-DPB10401 vs HLA-DPA10103-DPB10401
 		String[] set3 = { "HLA-DPA10103-DPB10201", "HLA-DPA10103-DPB10401", "HLA-DPA101-DPB10401","HLA-DPA10201-DPB10101",
 				"HLA-DPA10201-DPB10501", "HLA-DPA10301-DPB10402" };
 
@@ -242,7 +297,7 @@ public class NovelSurfaceResultsProcessor {
 		// print all black: genotypes with no novel surfaces: no risk of
 		// inhibitor formation
 		List<String> variantBlackList = new ArrayList<>();
-		List<String> variantExcludeList = new ArrayList<>();
+		List<String> variantIncludeList = new ArrayList<>();
 
 		List<String> variants = helper.getVariants();
 		
@@ -251,6 +306,7 @@ public class NovelSurfaceResultsProcessor {
 					.collect(Collectors.toList());
 
 			if (filteredList.size() == this.getAlleleCounter()) {
+				//all blacks predicted no risk
 				variantBlackList.add(variant);
 			}
 
@@ -273,19 +329,22 @@ public class NovelSurfaceResultsProcessor {
 			if (variantOnly1.size() < 2 || variantOnly2.size() < 2 || variantOnly3.size() < 2
 					|| variantOnly4.size() < 2) {
 				// calculate
+				variantIncludeList.add(variant);
 			} else {
-				variantExcludeList.add(variant);
 				// exclude the patients with that variant
 				// for only the ones with risk calculation or for all???
 			}
 		}
 
-		System.out.println("Number of Novel Surfaces:" + variantBlackList.size());
-		System.out.println("Number of Exclude Surfaces:" + variantExcludeList.size());
+		System.out.println("Number of no risk black variants:" + variantBlackList.size());
 
+		Set<String> uniqueVariantsToInclude = new HashSet<>();
+		uniqueVariantsToInclude.addAll(variantBlackList);
+		uniqueVariantsToInclude.addAll(variantIncludeList);
+		
 		try {
 			FileWriter writer = new FileWriter(blackCsvFile);
-			FileWriter writer2 = new FileWriter(excludeCsvFile);
+			FileWriter writer2 = new FileWriter(includeCsvFile);
 
 			CSVUtils.writeLine(writer, Arrays.asList("Variant"));
 			CSVUtils.writeLine(writer2, Arrays.asList("Variant"));
@@ -296,7 +355,7 @@ public class NovelSurfaceResultsProcessor {
 				CSVUtils.writeLine(writer, list);
 			}
 
-			for (String variant : variantExcludeList) {
+			for (String variant : uniqueVariantsToInclude) {
 				List<String> list = new ArrayList<>();
 				list.add(variant);
 				CSVUtils.writeLine(writer2, list);
@@ -314,7 +373,5 @@ public class NovelSurfaceResultsProcessor {
 		}
 
 	}
-
-	
 	
 }

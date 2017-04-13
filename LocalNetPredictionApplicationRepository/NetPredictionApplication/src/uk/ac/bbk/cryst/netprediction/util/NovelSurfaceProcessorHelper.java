@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +18,10 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
+import uk.ac.bbk.cryst.netprediction.dao.AlleleGroupDataDaoImpl;
+import uk.ac.bbk.cryst.netprediction.model.AlleleGroupData;
 import uk.ac.bbk.cryst.netprediction.model.PatientData;
 
 public class NovelSurfaceProcessorHelper {
@@ -42,6 +47,27 @@ public class NovelSurfaceProcessorHelper {
 	public NovelSurfaceProcessorHelper() throws IOException{
 		readNonSevereMutationFile();
 		readNonSeverePatientFile();
+	}
+	
+	public List<String> readAlleleFile(PredictionType type) throws FileNotFoundException{
+		List<String> alleles = new ArrayList<>();
+		String path = null;
+		switch(type){
+		case MHCII:
+			path = "data//input//mhcII_full_list_netmhcii.csv";
+			break;
+		case MHCIIPAN31:
+			path = "data//input//mhcII_full_list.csv";
+		default:
+			path = "data//input//mhcII.csv";
+		}
+		AlleleGroupData groupData = new AlleleGroupDataDaoImpl(path).getGroupData();
+		for (String allele : groupData.getAlleleMap().keySet()) {
+			alleles.add(allele);
+			
+		}
+		return alleles;
+
 	}
 	
 	public List<String> readVariantFile(File variantFile) throws FileNotFoundException {
@@ -165,6 +191,35 @@ public class NovelSurfaceProcessorHelper {
 				}
 			}
 		}
+	}
+	
+	public void printList(List<PatientData> list) {
+		list.forEach(p -> System.out.println(p));
+	}
+
+	public void generateCustomPatientCsvFile(List<PatientData> patientList) {
+		String csvFile = "data//output//custom_factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv";
+		try {
+			FileWriter writer = new FileWriter(csvFile);
+			CSVUtils.writeLine(writer, Arrays.asList("Variant", "Position", "Severity", "InhibitorFormation"));
+
+			for (PatientData p : patientList) {
+				List<String> list = new ArrayList<>();
+				list.add(p.getVariant());
+				list.add(String.valueOf(p.getPosition()));
+				list.add(p.getSeverity());
+				list.add(String.valueOf(p.isInhibitorFormation()));
+
+				CSVUtils.writeLine(writer, list);
+			}
+			writer.flush();
+			writer.close();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 	
 	private static boolean isCrossCheckCorrect(Map<Integer, String> varMap) throws IOException {

@@ -5,7 +5,7 @@ public class HeatMapBox {
 	String allele;
 	String variant;
 	String colour;
-	
+
 	public String getColour() {
 		return colour;
 	}

@@ -34,9 +34,10 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			patientList = helper.getPatientList();
 			variants = helper.getVariants();
 
-			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(false, false,
+			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(false, true,
 					PredictionType.MHCII);
 			processor.createVariantFiles();
+			processor.createHeatMapFiles(false);
 
 			printCategoricalNumbersSimple();
 			printCategoricalNumbersComplex();
@@ -93,22 +94,22 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 
 		for (Float threshold : thresholds) {
 			String allBlackFilePath = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
-			String excludeFilePath = "data//output//variants_exclude_" + threshold.intValue() + ".csv";
+			String includeFilePath = "data//output//variants_include_" + threshold.intValue() + ".csv";
 			System.out.println("calculateCategoricalNumbersComplex:" +threshold);
-			calculateCategoricalNumbersComplex(patientList, allBlackFilePath,excludeFilePath);
+			calculateCategoricalNumbersComplex(patientList, allBlackFilePath,includeFilePath);
 		}
 
 		System.out.println(fishersComplex);
 
 	}
 
-	private static void calculateCategoricalNumbersComplex(List<PatientData> patientList, String allBlackFilePath, String excludeFilePath) {
+	private static void calculateCategoricalNumbersComplex(List<PatientData> patientList, String allBlackFilePath, String includeFilePath) {
 		// TODO Auto-generated method stub
 
 		try {
 
-			File excludeFile = new File(excludeFilePath);
-			final List<String> exclude = helper.readVariantFile(excludeFile);
+			File includeFile = new File(includeFilePath);
+			final List<String> include = helper.readVariantFile(includeFile);
 			
 			File allBlackFile = new File(allBlackFilePath);
 			final List<String> allBlack = helper.readVariantFile(allBlackFile);
@@ -117,7 +118,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			// which we predict no risk of
 			// inhibitor development with any of the 14 HLA alleles in our set.
 			List<PatientData> aList = patientList.stream()
-					.filter(p -> allBlack.contains(p.getVariant()) && !p.isInhibitorFormation())
+					.filter(p -> allBlack.contains(p.getVariant()) && !p.isInhibitorFormation() && include.contains(p.getVariant()))
 					.collect(Collectors.toList());
 			// printList(aList);
 			System.out.println("A=" + aList.size());
@@ -126,7 +127,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			// we predict no risk of inhibitor
 			// development with any of the 14 HLA alleles in our set.
 			List<PatientData> bList = patientList.stream()
-					.filter(p -> allBlack.contains(p.getVariant()) && p.isInhibitorFormation())
+					.filter(p -> allBlack.contains(p.getVariant()) && p.isInhibitorFormation() && include.contains(p.getVariant()))
 					.collect(Collectors.toList());
 			// printList(bList);
 			System.out.println("B=" + bList.size());
@@ -135,7 +136,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			// we predict a risk of inhibitor
 			// development with at least one of the 14 HLA alleles in our set.
 			List<PatientData> cList = patientList.stream()
-					.filter(p -> !allBlack.contains(p.getVariant()) && p.isInhibitorFormation() && !exclude.contains(p.getVariant()))
+					.filter(p -> !allBlack.contains(p.getVariant()) && p.isInhibitorFormation() && include.contains(p.getVariant()))
 					.collect(Collectors.toList());
 			// printList(cList);
 			System.out.println("C=" + cList.size());
@@ -145,7 +146,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			// inhibitor development with at least one of the 14 HLA alleles in
 			// our set.
 			List<PatientData> dList = patientList.stream()
-					.filter(p -> !allBlack.contains(p.getVariant()) && !p.isInhibitorFormation() && !exclude.contains(p.getVariant()))
+					.filter(p -> !allBlack.contains(p.getVariant()) && !p.isInhibitorFormation() && include.contains(p.getVariant()))
 					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("D=" + dList.size());
@@ -262,33 +263,6 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 
 	}
 
-	private static void printList(List<PatientData> list) {
-		list.forEach(p -> System.out.println(p));
-	}
-
-	private static void generateCustomPatientCsvFile(List<PatientData> patientList) {
-		String csvFile = "data//output//custom_factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv";
-		try {
-			FileWriter writer = new FileWriter(csvFile);
-			CSVUtils.writeLine(writer, Arrays.asList("Variant", "Position", "Severity", "InhibitorFormation"));
-
-			for (PatientData p : patientList) {
-				List<String> list = new ArrayList<>();
-				list.add(p.getVariant());
-				list.add(String.valueOf(p.getPosition()));
-				list.add(p.getSeverity());
-				list.add(String.valueOf(p.isInhibitorFormation()));
-
-				CSVUtils.writeLine(writer, list);
-			}
-			writer.flush();
-			writer.close();
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
+	
 
 }
