@@ -153,12 +153,12 @@ public class NovelSurfaceResultsProcessor {
 		}
 	}
 	
-	public void createHeatMapFiles(boolean proteomeScan) throws IOException{
+	public void createHeatMapFiles() throws IOException{
 		//write first line all variants comma separated
 		StringJoiner content = new StringJoiner(",");
 		String newLine = "\n";
 		content.add("allele");
-		for(String variant : helper.getVariants()){
+		for(String variant : helper.getHeatmapVariants()){
 			content.add(variant);
 		}
 		String fullContent = content.toString() + newLine;
@@ -167,14 +167,14 @@ public class NovelSurfaceResultsProcessor {
 		//then for each variant and for each allele 
 		//find the box and examine the colour
 		//item[0] for prot scan off
-		//item[1] for prot scan on, could be grey (1500)
-		//could also be black (2000)
+		//item[1] for prot scan on, could be grey
+		//could also be black
 		
 		for(String allele : helper.readAlleleFile(this.getPredictionType())){
 			content = new StringJoiner(",");
 			content.add(allele);
 			
-			for(String variant : helper.getVariants()){
+			for(String variant : helper.getHeatmapVariants()){
 				List<HeatMapBox> filteredList = boxList.stream().filter(p -> variant.equals(p.getVariant()) 
 						&& allele.equals(p.getAllele()))
 						.collect(Collectors.toList());
@@ -182,10 +182,10 @@ public class NovelSurfaceResultsProcessor {
 				
 				if(!box.getColour().equals("black")){
 					String[] items = box.getColour().split("/");
-					if(proteomeScan && items[1].equals("grey")){
-						content.add(String.valueOf(2001f));
+					if(this.isProteomeScanningOn() && items[1].equals("grey")){
+						content.add(String.valueOf(1101f));
 					}
-					else if(proteomeScan && !items[1].equals("grey") ){
+					else if(this.isProteomeScanningOn() && !items[1].equals("grey") ){
 						content.add(items[1]);
 					}
 					else{
@@ -200,13 +200,13 @@ public class NovelSurfaceResultsProcessor {
 			fullContent+=content.toString()+newLine;
 		}
 		
-		File file = new File("data//output//heatmap.csv");
+		File file = new File("data//output//heatmap_" + this.getPredictionType()+ "_" + this.isProteomeScanningOn() +".csv");
 		FileHelper.writeToFile(file, fullContent);
 		
 	}
 
 	public void createVariantFiles() {
-		Float[] thresholds = { 1000f, 500f, 300f, 200f, 100f, 50f };
+		Float[] thresholds = { 1000f, 500f, 300f, 200f, 100f, 50f, 25f };
 
 		for (Float threshold : thresholds) {
 			System.out.println("Threshold:" + threshold);
@@ -281,6 +281,7 @@ public class NovelSurfaceResultsProcessor {
 	private void writeToVariantsCsvFile(List<HeatMapBox> variantBlacks, Float threshold) {
 		String blackCsvFile = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
 		String includeCsvFile = "data//output//variants_include_" + threshold.intValue() + ".csv";
+		String patientSpecificBlackCsvFile = "data//output//variants_patient_allBlack_" + threshold.intValue() + ".csv";
 
 		String[] set1 = { "DRB1_0101", "DRB1_0301", "DRB1_0401", "DRB1_0404", "DRB1_0405", "DRB1_0701", "DRB1_0802",
 				"DRB1_0901", "DRB1_1101", "DRB1_1302", "DRB1_1501" };
@@ -293,11 +294,16 @@ public class NovelSurfaceResultsProcessor {
 
 		String[] set4 = { "HLA-DQA10101-DQB10501", "HLA-DQA10102-DQB10602", "HLA-DQA10301-DQB10302",
 				"HLA-DQA10401-DQB10402", "HLA-DQA10501-DQB10201", "HLA-DQA10501-DQB10301" };
+		
+		String[] set5 = {"HLA-DPA10301-DPB10402","HLA-DPA101-DPB10401","HLA-DQA10501-DQB10301","HLA-DQA10301-DQB10302",
+				"DRB1_0301","DRB1_0701","DRB4_0101","DRB3_0101","HLA-DPA10103-DPB10401"};
 
 		// print all black: genotypes with no novel surfaces: no risk of
 		// inhibitor formation
 		List<String> variantBlackList = new ArrayList<>();
 		List<String> variantIncludeList = new ArrayList<>();
+		List<String> variantPatientBlackList = new ArrayList<>();
+
 
 		List<String> variants = helper.getVariants();
 		
@@ -326,6 +332,10 @@ public class NovelSurfaceResultsProcessor {
 					.filter(p -> (Arrays.asList(set4)).contains(p.getAllele()) && variant.equals(p.getVariant()))
 					.collect(Collectors.toList());
 
+			List<HeatMapBox> variantOnly5 = variantBlacks.stream()
+					.filter(p -> (Arrays.asList(set5)).contains(p.getAllele()) && variant.equals(p.getVariant()))
+					.collect(Collectors.toList());
+			
 			if (variantOnly1.size() < 2 || variantOnly2.size() < 2 || variantOnly3.size() < 2
 					|| variantOnly4.size() < 2) {
 				// calculate
@@ -333,6 +343,11 @@ public class NovelSurfaceResultsProcessor {
 			} else {
 				// exclude the patients with that variant
 				// for only the ones with risk calculation or for all???
+			}
+			
+			// patient specific all 8 black
+			if(variantOnly5.size() == 8){
+				variantPatientBlackList.add(variant);
 			}
 		}
 
@@ -345,9 +360,12 @@ public class NovelSurfaceResultsProcessor {
 		try {
 			FileWriter writer = new FileWriter(blackCsvFile);
 			FileWriter writer2 = new FileWriter(includeCsvFile);
+			FileWriter writer3 = new FileWriter(patientSpecificBlackCsvFile);
+
 
 			CSVUtils.writeLine(writer, Arrays.asList("Variant"));
 			CSVUtils.writeLine(writer2, Arrays.asList("Variant"));
+			CSVUtils.writeLine(writer3, Arrays.asList("Variant"));
 
 			for (String variant : variantBlackList) {
 				List<String> list = new ArrayList<>();
@@ -361,12 +379,21 @@ public class NovelSurfaceResultsProcessor {
 				CSVUtils.writeLine(writer2, list);
 			}
 
+			for (String variant : variantPatientBlackList) {
+				List<String> list = new ArrayList<>();
+				list.add(variant);
+				CSVUtils.writeLine(writer3, list);
+			}
+			
 			writer.flush();
 			writer.close();
 
 			writer2.flush();
 			writer2.close();
 
+			writer3.flush();
+			writer3.close();
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

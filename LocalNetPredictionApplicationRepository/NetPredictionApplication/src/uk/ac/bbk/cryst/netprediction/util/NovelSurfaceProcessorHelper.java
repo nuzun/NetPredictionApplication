@@ -29,8 +29,15 @@ public class NovelSurfaceProcessorHelper {
 	PropertiesHelper properties = new PropertiesHelper();
 	List<String> variants = new ArrayList<>();
 	List<PatientData> patientList = new ArrayList<>();
+	List<String> heatmapVariants = new ArrayList<>();
  
 	
+
+	public List<String> getHeatmapVariants() {
+		return heatmapVariants;
+	}
+
+
 
 	public List<String> getVariants() {
 		return variants;
@@ -46,6 +53,7 @@ public class NovelSurfaceProcessorHelper {
 
 	public NovelSurfaceProcessorHelper() throws IOException{
 		readNonSevereMutationFile();
+		readMutationFile();
 		readNonSeverePatientFile();
 	}
 	
@@ -58,8 +66,10 @@ public class NovelSurfaceProcessorHelper {
 			break;
 		case MHCIIPAN31:
 			path = "data//input//mhcII_full_list.csv";
+			break;
 		default:
 			path = "data//input//mhcII.csv";
+			break;
 		}
 		AlleleGroupData groupData = new AlleleGroupDataDaoImpl(path).getGroupData();
 		for (String allele : groupData.getAlleleMap().keySet()) {
@@ -100,6 +110,25 @@ public class NovelSurfaceProcessorHelper {
 		try {
 			while ((line = br.readLine()) != null && !line.trim().equals("")) {
 				variants.add(line.trim());
+			}
+
+			br.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+	
+	public void readMutationFile() throws IOException {
+
+		String mutationFileFullPath = properties.getValue("mutationFileFullPath");
+		File mutationFile = new File(mutationFileFullPath);
+		String line = "";
+
+		BufferedReader br = new BufferedReader(new FileReader(mutationFile));
+		try {
+			while ((line = br.readLine()) != null && !line.trim().equals("")) {
+				heatmapVariants.add(line.trim());
 			}
 
 			br.close();

@@ -1,6 +1,7 @@
 package uk.ac.bbk.cryst.netprediction.main;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 	static List<PatientData> patientList = new ArrayList<>();
 	static List<String> variants = new ArrayList<>();
 	static NovelSurfaceProcessorHelper helper;
+	static Float[] thresholds = { 1000f, 500f, 300f, 200f, 100f, 50f, 25f };
 
 	public static void main(String[] args) throws IOException {
 
@@ -34,14 +36,17 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			patientList = helper.getPatientList();
 			variants = helper.getVariants();
 
-			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(false, true,
+			boolean onlyDR = false;
+			boolean protScan = false;
+			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(protScan, onlyDR,
 					PredictionType.MHCII);
 			processor.createVariantFiles();
-			processor.createHeatMapFiles(false);
+			processor.createHeatMapFiles();
 
 			printCategoricalNumbersSimple();
 			printCategoricalNumbersComplex();
 			printVariousStatistics();
+			printPatientSpecificStatistics();
 
 		}
 
@@ -53,6 +58,25 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 
 		}
 
+	}
+
+	private static void printPatientSpecificStatistics() throws FileNotFoundException {
+		// TODO Auto-generated method stub
+		
+		System.out.println("Patient Specific Stats:");
+		
+		for (Float threshold : thresholds) {
+			String patientBlackFilePath = "data//output//variants_patient_allBlack_" + threshold.intValue() + ".csv";
+			
+			File patientBlackFile = new File(patientBlackFilePath);
+			final List<String> patientAllBlack = helper.readVariantFile(patientBlackFile);
+			
+			int risky = variants.size() - patientAllBlack.size();
+			int percent = (risky * 100) / variants.size();
+			
+			System.out.println(threshold + " threshold:" + risky + "/" + variants.size() +
+					"=" + percent);
+		}
 	}
 
 	private static void printVariousStatistics() throws IOException {
@@ -90,7 +114,6 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 
 	private static void printCategoricalNumbersComplex() {
 		// TODO Auto-generated method stub
-		Float[] thresholds = { 1000f, 500f, 300f, 200f, 100f, 50f };
 
 		for (Float threshold : thresholds) {
 			String allBlackFilePath = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
@@ -164,7 +187,6 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 	}
 
 	private static void printCategoricalNumbersSimple() {
-		Float[] thresholds = { 1000f, 500f, 300f, 200f, 100f, 50f };
 
 		for (Float threshold : thresholds) {
 			String allBlackFilePath = "data//output//variants_allBlack_" + threshold.intValue() + ".csv";
