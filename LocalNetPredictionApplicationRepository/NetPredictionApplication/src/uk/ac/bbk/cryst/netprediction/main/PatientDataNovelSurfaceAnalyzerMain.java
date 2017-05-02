@@ -37,13 +37,13 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			variants = helper.getVariants();
 
 			boolean onlyDR = false;
-			boolean protScan = false;
+			boolean protScan = true;
 			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(protScan, onlyDR,
-					PredictionType.MHCII);
+					PredictionType.MHCIIPAN31);
 			processor.createVariantFiles();
 			processor.createHeatMapFiles();
 
-			printCategoricalNumbersSimple();
+			//printCategoricalNumbersSimple();
 			printCategoricalNumbersComplex();
 			printVariousStatistics();
 			printPatientSpecificStatistics();
@@ -109,10 +109,10 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 		// for(PatientData p : list){
 		// System.out.println(p.getVariant());
 		// }
-
+		
 	}
 
-	private static void printCategoricalNumbersComplex() {
+	private static void printCategoricalNumbersComplex() throws FileNotFoundException {
 		// TODO Auto-generated method stub
 
 		for (Float threshold : thresholds) {
@@ -120,10 +120,27 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			String includeFilePath = "data//output//variants_include_" + threshold.intValue() + ".csv";
 			System.out.println("calculateCategoricalNumbersComplex:" +threshold);
 			calculateCategoricalNumbersComplex(patientList, allBlackFilePath,includeFilePath);
+			//calculateNewRiskStatistics(allBlackFilePath,includeFilePath);
 		}
 
 		System.out.println(fishersComplex);
 
+	}
+	
+
+	private static void calculateNewRiskStatistics(String allBlackFilePath, String includeFilePath) throws FileNotFoundException {
+		// TODO Auto-generated method stub
+		File includeFile = new File(includeFilePath);
+		final List<String> include = helper.readVariantFile(includeFile);
+		
+		File allBlackFile = new File(allBlackFilePath);
+		final List<String> allBlack = helper.readVariantFile(allBlackFile);
+		
+		int noRisk = allBlack.size();
+		int risk = include.size() - noRisk;
+		int unknown = variants.size() - include.size();
+		System.out.println("Inhibitor risk:" + risk + " No risk:" + noRisk + " unknown:" + unknown);
+		
 	}
 
 	private static void calculateCategoricalNumbersComplex(List<PatientData> patientList, String allBlackFilePath, String includeFilePath) {

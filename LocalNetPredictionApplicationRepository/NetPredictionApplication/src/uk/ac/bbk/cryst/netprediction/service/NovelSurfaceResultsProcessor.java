@@ -251,7 +251,7 @@ public class NovelSurfaceResultsProcessor {
 						variantBlacks.add(box);
 						variantGreys.add(box);
 					} else {
-						if (Float.valueOf(items[1]) >= threshold) {
+						if (Float.valueOf(items[1]) > threshold) {
 							variantBlacks.add(box);
 						}
 					}
@@ -261,7 +261,7 @@ public class NovelSurfaceResultsProcessor {
 						variantGreys.add(box);
 					}
 
-					if (Float.valueOf(items[0]) >= threshold) {
+					if (Float.valueOf(items[0]) > threshold) {
 						variantBlacks.add(box);
 
 					}
@@ -275,7 +275,20 @@ public class NovelSurfaceResultsProcessor {
 		}
 
 		writeToVariantsCsvFile(variantBlacks, threshold);
+		printSquareBasedRiskStatistics(variantBlacks.size(), threshold);
 
+	}
+	
+	
+
+	private void printSquareBasedRiskStatistics(int black, Float threshold) {
+		//greys only revelant with 1000nM as we decrease the threshold squares turn to black
+		
+		System.out.println("At "+ threshold + ":");
+		System.out.println("NO RISK= " + black +"/"+ boxList.size());
+		System.out.println("RISK= " + (boxList.size() - black) + "/" + boxList.size());
+		System.out.println("RISK RATE= " + ((boxList.size() - black)*100)/boxList.size());
+		
 	}
 
 	private void writeToVariantsCsvFile(List<HeatMapBox> variantBlacks, Float threshold) {
@@ -295,6 +308,7 @@ public class NovelSurfaceResultsProcessor {
 		String[] set4 = { "HLA-DQA10101-DQB10501", "HLA-DQA10102-DQB10602", "HLA-DQA10301-DQB10302",
 				"HLA-DQA10401-DQB10402", "HLA-DQA10501-DQB10201", "HLA-DQA10501-DQB10301" };
 		
+		//one patient
 		String[] set5 = {"HLA-DPA10301-DPB10402","HLA-DPA101-DPB10401","HLA-DQA10501-DQB10301","HLA-DQA10301-DQB10302",
 				"DRB1_0301","DRB1_0701","DRB4_0101","DRB3_0101","HLA-DPA10103-DPB10401"};
 
