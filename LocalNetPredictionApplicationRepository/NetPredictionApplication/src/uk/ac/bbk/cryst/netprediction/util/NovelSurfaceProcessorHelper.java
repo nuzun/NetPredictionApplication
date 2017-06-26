@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +53,9 @@ public class NovelSurfaceProcessorHelper {
 
 
 	public NovelSurfaceProcessorHelper() throws IOException{
-		readNonSevereMutationFile();
-		readMutationFile();
-		readNonSeverePatientFile();
+		readNonSevereVariantsFile(); //variants for all non severe mutations
+		readHeatmapVariantsFile(); //heatmapVariants just contains the variants we want to generate the heatmap for
+		readPatientFile("data//input//factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv"); //patientList
 	}
 	
 	public List<String> readAlleleFile(PredictionType type) throws FileNotFoundException{
@@ -76,6 +77,8 @@ public class NovelSurfaceProcessorHelper {
 			alleles.add(allele);
 			
 		}
+		
+		Collections.sort(alleles);
 		return alleles;
 
 	}
@@ -100,7 +103,7 @@ public class NovelSurfaceProcessorHelper {
 		return variantList;
 	}
 	
-	public void readNonSevereMutationFile() throws IOException {
+	public void readNonSevereVariantsFile() throws IOException {
 
 		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
 		File mutationFile = new File(mutationFileFullPath);
@@ -119,7 +122,7 @@ public class NovelSurfaceProcessorHelper {
 
 	}
 	
-	public void readMutationFile() throws IOException {
+	public void readHeatmapVariantsFile() throws IOException {
 
 		String mutationFileFullPath = properties.getValue("mutationFileFullPath");
 		File mutationFile = new File(mutationFileFullPath);
@@ -138,7 +141,7 @@ public class NovelSurfaceProcessorHelper {
 
 	}
 	
-	public void readNonSeverePatientFile() {
+	public void readPatientFile(String filePath) {
 		// Set<String> uniqueList = new HashSet<>();
 		Map<Integer, String> varMap = new HashMap<>();
 
@@ -148,8 +151,7 @@ public class NovelSurfaceProcessorHelper {
 
 		try {
 
-			fileReader = new FileReader(
-					"data//input//factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv");
+			fileReader = new FileReader(filePath);
 			csvFileParser = new CSVParser(fileReader, csvFileFormat);
 			List<CSVRecord> csvRecords = csvFileParser.getRecords();
 
