@@ -154,9 +154,12 @@ public class NovelSurfaceResultsProcessor {
 					String corePeptide_2 = elements[6];
 					String IC50_2 = elements[7];
 					String colour = elements[8];
-
-					HeatMapBox box = new HeatMapBox(allele, variant, colour);
-					boxList.add(box);
+					
+					//check variants we want to calculate things for first before creating 
+					if(this.getHelper().getVariants().contains(variant)){
+						HeatMapBox box = new HeatMapBox(allele, variant, colour);
+						boxList.add(box);
+					}
 
 				}
 			}

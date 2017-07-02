@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -21,6 +25,7 @@ public class ProteomeAnalyser {
 	static PropertiesHelper properties = new PropertiesHelper();
 
 	public static void main(String[] args) throws IOException {
+		//processProteomeFile();
 		processLog();
 	}
 
@@ -61,13 +66,18 @@ public class ProteomeAnalyser {
 	}
 
 	private static void processLog() throws IOException {
+		Map<String,HashSet<String>> matchMap = new HashMap<>();
 		Scanner scanner = null;
 		File logFile = new File(properties.getValue("logPath"));
 
 		String pVariantLine = "INFO:\\s*(\\w{1}-\\d+-\\w{1})";
 		String runProteomeCheckText = "runProteomeCheck";
-		String pIC50Line = "IC50Score=(.*?),";
+		String pIC50Line = "IC50Score=(.*?)[,\\]]";
 
+		String mutation = "";
+		String allele = "";
+		String key= "";
+		
 		try {
 			scanner = new Scanner(logFile);
 
@@ -85,11 +95,21 @@ public class ProteomeAnalyser {
 
 					Pattern r = Pattern.compile(pVariantLine);
 					Matcher m = r.matcher(line);
+					
+					
 					if (m.find()) {
-						System.out.println("mutation:" + m.group(1));
+						mutation = m.group(1);
+						//System.out.println("mutation:" + mutation );
 					}
-
-					System.out.println("allele:" + scanner.nextLine());
+					
+					allele = scanner.nextLine();
+					//System.out.println("allele:" + allele);
+					
+					key = mutation+","+allele;
+					
+					if(!matchMap.keySet().contains(key)){
+						matchMap.put(key, new HashSet<>());
+					}
 				}
 
 				if (line.contains(runProteomeCheckText)) {
@@ -112,7 +132,8 @@ public class ProteomeAnalyser {
 								}
 							} else {
 								if (toPrint == 1) {
-									System.out.println("protein:" + pName);
+									//System.out.println("protein:" + pName);
+									matchMap.get(key).add(pName);
 								}
 								break;
 							}
@@ -122,10 +143,25 @@ public class ProteomeAnalyser {
 				} // runProteomeCheck line
 
 			} // while
+			
+			
+			//matchMap.forEach((k, v) -> {
+			    //System.out.println("Key : " + k + " Value : " + v);
+			//});
+			
+			Comparator<Entry<String, HashSet<String>>> byValue = Comparator.comparing(e -> e.getValue().size());
+					
+			matchMap.entrySet().stream()
+	        .sorted(byValue.reversed())
+	        .limit(10) 
+	        .forEach(System.out::println);
+			
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
 			scanner.close();
+			
 		}
 
 	}

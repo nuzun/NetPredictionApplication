@@ -14,7 +14,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 			boolean onlyDR = false;
 			boolean protScan = false;
 			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(protScan, onlyDR,
-					PredictionType.MHCIIPAN31); //createVariantFile prints square based stats in the const
+					PredictionType.MHCII); //createVariantFile prints square based stats in the const
 
 			processor.printRepresentativePatientStatistics();
 			processor.printCategoricalNumbersComplex();

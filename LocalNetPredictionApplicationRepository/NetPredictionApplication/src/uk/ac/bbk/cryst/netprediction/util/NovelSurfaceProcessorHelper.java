@@ -83,6 +83,13 @@ public class NovelSurfaceProcessorHelper {
 
 	}
 	
+	/**
+	 * This reads a file with a list of variants like include files, black files 
+	 * for each threshold
+	 * @param variantFile
+	 * @return
+	 * @throws FileNotFoundException
+	 */
 	public List<String> readVariantFile(File variantFile) throws FileNotFoundException {
 
 		String line = "";
@@ -103,6 +110,11 @@ public class NovelSurfaceProcessorHelper {
 		return variantList;
 	}
 	
+	/**
+	 * This is the actual variants we calculate our results for
+	 * assigns variants variable
+	 * @throws IOException
+	 */
 	public void readNonSevereVariantsFile() throws IOException {
 
 		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
@@ -122,6 +134,11 @@ public class NovelSurfaceProcessorHelper {
 
 	}
 	
+	/**
+	 * This is used to read a variant file to calculate a heatmap for
+	 * assings heatmapVariants variable
+	 * @throws IOException
+	 */
 	public void readHeatmapVariantsFile() throws IOException {
 
 		String mutationFileFullPath = properties.getValue("mutationFileFullPath");
