@@ -7,7 +7,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +16,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import uk.ac.bbk.cryst.netprediction.common.InhibitorStatus;
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.model.HeatMapBox;
@@ -107,7 +107,7 @@ public class NovelSurfaceResultsProcessor {
 		this.setProteomeScanningOn(proteomeScanning);
 		this.setOnlyDR(onlyDR);
 
-		readNovelSurfaceResultFiles(); 	// populate full heatbox list
+		readNovelSurfaceResultFiles(); // populate full heatbox list
 		createHeatMapFiles();
 
 		for (Float threshold : thresholds) {
@@ -154,9 +154,10 @@ public class NovelSurfaceResultsProcessor {
 					String corePeptide_2 = elements[6];
 					String IC50_2 = elements[7];
 					String colour = elements[8];
-					
-					//check variants we want to calculate things for first before creating 
-					if(this.getHelper().getVariants().contains(variant)){
+
+					// check variants we want to calculate things for first
+					// before creating
+					if (this.getHelper().getVariants().contains(variant)) {
 						HeatMapBox box = new HeatMapBox(allele, variant, colour);
 						boxList.add(box);
 					}
@@ -286,38 +287,37 @@ public class NovelSurfaceResultsProcessor {
 		writeToVariantsCsvFile(heatmapBlacks, threshold);
 		System.out.println("Threshold:" + threshold);
 		printSquareBasedRiskStatistics(heatmapBlacks.size());
-		printAlleleBasedRiskStatistics(heatmapBlacks,threshold);
+		printAlleleBasedRiskStatistics(heatmapBlacks, threshold);
 
 	}
 
-	
 	private void printSquareBasedRiskStatistics(int black) {
 		// greys only revelant with 1000nM as we decrease the threshold squares
 		// turn to black
-		
-		System.out.println("NoRisk = " + black + "/" + boxList.size() + "="
-				+ ((black * 100) / boxList.size()));
-		
+
+		System.out.println("NoRisk = " + black + "/" + boxList.size() + "=" + ((black * 100) / boxList.size()));
+
 		System.out.println("----------------------------------------------------------");
-		
+
 	}
-	
-	private void printAlleleBasedRiskStatistics(List<HeatMapBox> heatmapBlacks, Float threshold) throws FileNotFoundException {
+
+	private void printAlleleBasedRiskStatistics(List<HeatMapBox> heatmapBlacks, Float threshold)
+			throws FileNotFoundException {
 		// TODO Auto-generated method stub
 		int totalVariants = this.getHelper().getVariants().size();
-		for (String allele : this.getHelper().readAlleleFile(this.getPredictionType())){
+		for (String allele : this.getHelper().readAlleleFile(this.getPredictionType())) {
 			List<HeatMapBox> filteredList = heatmapBlacks.stream().filter(p -> allele.equals(p.getAllele()))
 					.collect(Collectors.toList());
 
-			
 			int noRisk = filteredList.size();
 			int percent = (noRisk * 100) / totalVariants;
 
-			System.out.println(allele + " with " + threshold + " threshold NoRisk:" + noRisk + "/" + totalVariants + "=" + percent);
+			System.out.println(allele + " with " + threshold + " threshold NoRisk:" + noRisk + "/" + totalVariants + "="
+					+ percent);
 		}
-		
+
 		System.out.println("----------------------------------------------------------");
-		
+
 	}
 
 	public void printVariousStatistics() throws IOException {
@@ -344,12 +344,11 @@ public class NovelSurfaceResultsProcessor {
 
 		System.out.println("Number of variant positions with more than one mutation:" + counter);
 
-		List<PatientData> list = this.getHelper().getPatientList().stream().filter(p -> p.isInhibitorFormation())
-				.collect(Collectors.toList());
+		List<PatientData> list = this.getHelper().getPatientList().stream()
+				.filter(p -> p.getInhibitorStatus().equals(InhibitorStatus.YES)).collect(Collectors.toList());
 		System.out.println("Number of patients with inhibitors in the patient data:" + list.size());
 
 	}
-	
 
 	public void printRepresentativePatientStatistics() throws FileNotFoundException {
 		// TODO Auto-generated method stub
@@ -361,14 +360,14 @@ public class NovelSurfaceResultsProcessor {
 			String patientBlackFilePath = "data//output//variants_patient_allBlack_" + threshold.intValue() + ".csv";
 
 			File patientBlackFile = new File(patientBlackFilePath);
-			final List<String> patientAllBlack = this.helper.readVariantFile(patientBlackFile);
+			final List<String> patientAllBlack = this.getHelper().readVariantFile(patientBlackFile);
 
 			int noRisk = patientAllBlack.size();
 			int percent = (noRisk * 100) / totalVariants;
 
 			System.out.println(threshold + " threshold NoRisk:" + noRisk + "/" + totalVariants + "=" + percent);
 		}
-		
+
 		System.out.println("----------------------------------------------------------");
 
 	}
@@ -403,24 +402,30 @@ public class NovelSurfaceResultsProcessor {
 			// A: Patients without inhibitors having a missense mutation for
 			// which we predict no risk of
 			// inhibitor development with any of the 14 HLA alleles in our set.
-			List<PatientData> aList = patientList.stream().filter(p -> allBlack.contains(p.getVariant())
-					&& !p.isInhibitorFormation() && include.contains(p.getVariant())).collect(Collectors.toList());
+			List<PatientData> aList = patientList
+					.stream().filter(p -> allBlack.contains(p.getVariant())
+							&& p.getInhibitorStatus().equals(InhibitorStatus.NO) && include.contains(p.getVariant()))
+					.collect(Collectors.toList());
 			// printList(aList);
 			System.out.println("A=" + aList.size());
 
 			// B: Patients with inhibitors having a missense mutation for which
 			// we predict no risk of inhibitor
 			// development with any of the 14 HLA alleles in our set.
-			List<PatientData> bList = patientList.stream().filter(p -> allBlack.contains(p.getVariant())
-					&& p.isInhibitorFormation() && include.contains(p.getVariant())).collect(Collectors.toList());
+			List<PatientData> bList = patientList
+					.stream().filter(p -> allBlack.contains(p.getVariant())
+							&& p.getInhibitorStatus().equals(InhibitorStatus.YES) && include.contains(p.getVariant()))
+					.collect(Collectors.toList());
 			// printList(bList);
 			System.out.println("B=" + bList.size());
 
 			// C: Patients with inhibitors having a missense mutation for which
 			// we predict a risk of inhibitor
 			// development with at least one of the 14 HLA alleles in our set.
-			List<PatientData> cList = patientList.stream().filter(p -> !allBlack.contains(p.getVariant())
-					&& p.isInhibitorFormation() && include.contains(p.getVariant())).collect(Collectors.toList());
+			List<PatientData> cList = patientList.stream()
+					.filter(p -> !allBlack.contains(p.getVariant())
+							&& p.getInhibitorStatus().equals(InhibitorStatus.YES) && include.contains(p.getVariant()))
+					.collect(Collectors.toList());
 			// printList(cList);
 			System.out.println("C=" + cList.size());
 
@@ -428,8 +433,10 @@ public class NovelSurfaceResultsProcessor {
 			// which we predict a risk of
 			// inhibitor development with at least one of the 14 HLA alleles in
 			// our set.
-			List<PatientData> dList = patientList.stream().filter(p -> !allBlack.contains(p.getVariant())
-					&& !p.isInhibitorFormation() && include.contains(p.getVariant())).collect(Collectors.toList());
+			List<PatientData> dList = patientList
+					.stream().filter(p -> !allBlack.contains(p.getVariant())
+							&& p.getInhibitorStatus().equals(InhibitorStatus.NO) && include.contains(p.getVariant()))
+					.collect(Collectors.toList());
 			// printList(dList);
 			System.out.println("D=" + dList.size());
 

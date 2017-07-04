@@ -1,7 +1,6 @@
 package uk.ac.bbk.cryst.netprediction.main;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
+import uk.ac.bbk.cryst.netprediction.util.NovelSurfaceProcessorHelper;
 import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
 import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 import uk.ac.bbk.cryst.sequenceanalysis.service.PeptideGenerator;
@@ -25,7 +25,7 @@ public class ProteomeAnalyser {
 	static PropertiesHelper properties = new PropertiesHelper();
 
 	public static void main(String[] args) throws IOException {
-		//processProteomeFile();
+		// processProteomeFile();
 		processLog();
 	}
 
@@ -66,7 +66,10 @@ public class ProteomeAnalyser {
 	}
 
 	private static void processLog() throws IOException {
-		Map<String,HashSet<String>> matchMap = new HashMap<>();
+		Map<String, ArrayList<String>> matchMapByMutationAndAllele = new HashMap<>();
+		Map<String, ArrayList<String>> matchMapByMutationOnly = new HashMap<>();
+		NovelSurfaceProcessorHelper helper = new NovelSurfaceProcessorHelper();
+
 		Scanner scanner = null;
 		File logFile = new File(properties.getValue("logPath"));
 
@@ -76,17 +79,10 @@ public class ProteomeAnalyser {
 
 		String mutation = "";
 		String allele = "";
-		String key= "";
-		
+		String key = "";
+
 		try {
 			scanner = new Scanner(logFile);
-
-			Pattern pattern = Pattern.compile(pIC50Line);
-			// Matcher matcher = pattern.matcher(mydata);
-			// if (matcher.find())
-			// {
-			// System.out.println(matcher.group(1));
-			// }
 
 			while (scanner.hasNext()) {
 				String line = scanner.nextLine();
@@ -95,20 +91,27 @@ public class ProteomeAnalyser {
 
 					Pattern r = Pattern.compile(pVariantLine);
 					Matcher m = r.matcher(line);
-					
-					
+
 					if (m.find()) {
 						mutation = m.group(1);
-						//System.out.println("mutation:" + mutation );
+						// System.out.println("mutation:" + mutation );
 					}
-					
+
 					allele = scanner.nextLine();
-					//System.out.println("allele:" + allele);
-					
-					key = mutation+","+allele;
-					
-					if(!matchMap.keySet().contains(key)){
-						matchMap.put(key, new HashSet<>());
+					// System.out.println("allele:" + allele);
+
+					key = mutation + "," + allele;
+
+					// check if the mutation is in our list
+					if (helper.getVariants().contains(mutation)) {
+
+						if (!matchMapByMutationAndAllele.keySet().contains(key)) {
+							matchMapByMutationAndAllele.put(key, new ArrayList<>());
+						}
+
+						if (!matchMapByMutationOnly.keySet().contains(mutation)) {
+							matchMapByMutationOnly.put(mutation, new ArrayList<>());
+						}
 					}
 				}
 
@@ -132,8 +135,13 @@ public class ProteomeAnalyser {
 								}
 							} else {
 								if (toPrint == 1) {
-									//System.out.println("protein:" + pName);
-									matchMap.get(key).add(pName);
+									// System.out.println("protein:" + pName);
+									// check if the mutation is in our list
+									if (helper.getVariants().contains(mutation)) {
+										matchMapByMutationAndAllele.get(key).add(pName);
+										matchMapByMutationOnly.get(mutation).add(pName);
+									}
+
 								}
 								break;
 							}
@@ -143,25 +151,26 @@ public class ProteomeAnalyser {
 				} // runProteomeCheck line
 
 			} // while
-			
-			
-			//matchMap.forEach((k, v) -> {
-			    //System.out.println("Key : " + k + " Value : " + v);
-			//});
-			
-			Comparator<Entry<String, HashSet<String>>> byValue = Comparator.comparing(e -> e.getValue().size());
-					
-			matchMap.entrySet().stream()
-	        .sorted(byValue.reversed())
-	        .limit(10) 
-	        .forEach(System.out::println);
-			
-			
+
+			// matchMap.forEach((k, v) -> {
+			// System.out.println("Key : " + k + " Value : " + v);
+			// });
+
+			Comparator<Entry<String, ArrayList<String>>> byValue = Comparator.comparing(e -> e.getValue().size());
+
+			matchMapByMutationAndAllele.entrySet().stream().sorted(byValue.reversed()).limit(10)
+					.forEach(System.out::println);
+
+			System.out.println("**********************************************************");
+
+			matchMapByMutationOnly.entrySet().stream().sorted(byValue.reversed()).limit(10)
+					.forEach(System.out::println);
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
 			scanner.close();
-			
+
 		}
 
 	}

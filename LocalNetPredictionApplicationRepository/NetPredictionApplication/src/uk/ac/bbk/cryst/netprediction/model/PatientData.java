@@ -1,11 +1,13 @@
 package uk.ac.bbk.cryst.netprediction.model;
 
+import uk.ac.bbk.cryst.netprediction.common.InhibitorStatus;
+
 public class PatientData {
 
 	private String variant;
 	private int position;
 	private String severity;
-	private boolean inhibitorFormation;
+	private InhibitorStatus inhibitorStatus;
 	public String getVariant() {
 		return variant;
 	}
@@ -24,23 +26,25 @@ public class PatientData {
 	public void setSeverity(String severity) {
 		this.severity = severity;
 	}
-	public boolean isInhibitorFormation() {
-		return inhibitorFormation;
+	
+	public InhibitorStatus getInhibitorStatus() {
+		return inhibitorStatus;
 	}
-	public void setInhibitorFormation(boolean inhibitorFormation) {
-		this.inhibitorFormation = inhibitorFormation;
+	public void setInhibitorStatus(InhibitorStatus inhibitorStatus) {
+		this.inhibitorStatus = inhibitorStatus;
 	}
-	public PatientData(String variant, int position, String severity, boolean inhibitorFormation) {
+	
+	public PatientData(String variant, int position, String severity, InhibitorStatus inhibitorStatus) {
 		super();
 		this.variant = variant;
 		this.position = position;
 		this.severity = severity;
-		this.inhibitorFormation = inhibitorFormation;
+		this.inhibitorStatus = inhibitorStatus;
 	}
 	@Override
 	public String toString() {
 		return "PatientData [variant=" + variant + ", position=" + position + ", severity=" + severity
-				+ ", inhibitorFormation=" + inhibitorFormation + "]";
+				+ ", inhibitorFormation=" + inhibitorStatus + "]";
 	}
 	
 	

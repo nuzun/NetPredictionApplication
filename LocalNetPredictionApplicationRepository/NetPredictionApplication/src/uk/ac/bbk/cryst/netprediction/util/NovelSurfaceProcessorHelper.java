@@ -19,6 +19,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import uk.ac.bbk.cryst.netprediction.common.InhibitorStatus;
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.dao.AlleleGroupDataDaoImpl;
@@ -53,9 +54,14 @@ public class NovelSurfaceProcessorHelper {
 
 
 	public NovelSurfaceProcessorHelper() throws IOException{
-		readNonSevereVariantsFile(); //variants for all non severe mutations
+		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
+		//String mutationFileFullPath = properties.getValue("mutationFileAllSeverityFullPath");
+		
+		readFullVariantsFile(mutationFileFullPath); //variants for all mutations we are interested in
 		readHeatmapVariantsFile(); //heatmapVariants just contains the variants we want to generate the heatmap for
 		readPatientFile("data//input//factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv"); //patientList
+//		readPatientFile("data//input//factorviii_multiple_mutation_interim_allseverity_withInhibitorData_full.csv"); //patientList
+
 	}
 	
 	public List<String> readAlleleFile(PredictionType type) throws FileNotFoundException{
@@ -115,9 +121,8 @@ public class NovelSurfaceProcessorHelper {
 	 * assigns variants variable
 	 * @throws IOException
 	 */
-	public void readNonSevereVariantsFile() throws IOException {
+	public void readFullVariantsFile(String mutationFileFullPath) throws IOException {
 
-		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
 		File mutationFile = new File(mutationFileFullPath);
 		String line = "";
 
@@ -141,7 +146,7 @@ public class NovelSurfaceProcessorHelper {
 	 */
 	public void readHeatmapVariantsFile() throws IOException {
 
-		String mutationFileFullPath = properties.getValue("mutationFileFullPath");
+		String mutationFileFullPath = properties.getValue("heatmapMutationFileFullPath");
 		File mutationFile = new File(mutationFileFullPath);
 		String line = "";
 
@@ -180,11 +185,14 @@ public class NovelSurfaceProcessorHelper {
 				String severity = record.get(3);
 				String inhibitor = record.get(4);
 
-				boolean inhibitorFormation = false;
+				String inhibitorStatus = "UNKNOWN";
 				if (inhibitor.trim().equals("Yes")) {
-					inhibitorFormation = true;
-				} else {
-					inhibitorFormation = false;
+					inhibitorStatus = "YES";
+				} else if (inhibitor.trim().equals("No")){
+					inhibitorStatus = "NO";
+				}
+				else{
+					inhibitorStatus = "UNKNOWN";
 				}
 
 				if (oldIndex < 0) {
@@ -214,7 +222,7 @@ public class NovelSurfaceProcessorHelper {
 					 * System.out.println(item); uniqueList.add(item); }
 					 */
 
-					PatientData p = new PatientData(item, oldIndex, severity, inhibitorFormation);
+					PatientData p = new PatientData(item, oldIndex, severity, InhibitorStatus.valueOf(inhibitorStatus));
 					patientList.add(p);
 
 				} else {
@@ -256,7 +264,7 @@ public class NovelSurfaceProcessorHelper {
 				list.add(p.getVariant());
 				list.add(String.valueOf(p.getPosition()));
 				list.add(p.getSeverity());
-				list.add(String.valueOf(p.isInhibitorFormation()));
+				list.add(String.valueOf(p.getInhibitorStatus()));
 
 				CSVUtils.writeLine(writer, list);
 			}
