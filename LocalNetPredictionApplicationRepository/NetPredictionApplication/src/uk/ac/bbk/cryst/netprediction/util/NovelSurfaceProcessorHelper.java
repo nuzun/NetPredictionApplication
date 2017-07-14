@@ -54,13 +54,13 @@ public class NovelSurfaceProcessorHelper {
 
 
 	public NovelSurfaceProcessorHelper() throws IOException{
-		String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
-		//String mutationFileFullPath = properties.getValue("mutationFileAllSeverityFullPath");
+		//String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
+		String mutationFileFullPath = properties.getValue("mutationFileAllSeverityFullPath");
 		
 		readFullVariantsFile(mutationFileFullPath); //variants for all mutations we are interested in
 		readHeatmapVariantsFile(); //heatmapVariants just contains the variants we want to generate the heatmap for
-		readPatientFile("data//input//factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv"); //patientList
-//		readPatientFile("data//input//factorviii_multiple_mutation_interim_allseverity_withInhibitorData_full.csv"); //patientList
+		//readPatientFile("data//input//factorviii_multiple_mutation_interim_nonsevere_withInhibitorData_nonBlank.csv"); //patientList nonBlank we know their inhibitor status
+		readPatientFile("data//input//factorviii_multiple_mutation_interim_allseverity_withInhibitorData_nonBlank.csv"); //patientList nonBlank we know their inhibitor status
 
 	}
 	

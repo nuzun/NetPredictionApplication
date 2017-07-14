@@ -26,6 +26,9 @@ public class VariantListGenerator {
 	public static void readPatientFile(String filePath) {
 	    Set<String> uniqueList = new HashSet<>();
 		Map<Integer, String> varMap = new HashMap<>();
+		
+		int numberOfIndConsidered = 0;
+		Set<Integer> uniqueLocations = new HashSet<>();
 
 		FileReader fileReader = null;
 		CSVParser csvFileParser = null;
@@ -55,6 +58,8 @@ public class VariantListGenerator {
 				if (oldIndex < 0) {
 					continue;
 				}
+				
+				
 
 				String pattern = "p\\.(\\w{3})(\\d+)(\\w{3})";
 				Pattern r = Pattern.compile(pattern);
@@ -73,19 +78,24 @@ public class VariantListGenerator {
 						System.out.println("ERR on crosscheck");
 					}
 
+					else{
+						//This generates unique variant list: mutations.txt file
+						if(!uniqueList.contains(item)) {
+							System.out.println(item); 
+							uniqueList.add(item); 
+						}
+						numberOfIndConsidered++;
+						uniqueLocations.add(oldIndex);
+					}
 					
-					  //This generates unique variant list: mutations.txt file
-					  if(!uniqueList.contains(item)) {
-					  System.out.println(item); 
-					  uniqueList.add(item); 
-					  }
-					
-
-
 				} else {
 					System.out.println("NO MATCH");
 				}
 			}
+			
+			System.out.println("Number of individuals considered:" + numberOfIndConsidered);
+			System.out.println("Number of unique locations:" + uniqueLocations.size() + " in " + uniqueList.size());
+
 		}
 
 		catch (Exception e) {

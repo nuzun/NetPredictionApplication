@@ -346,7 +346,7 @@ public class NovelSurfaceResultsProcessor {
 
 		List<PatientData> list = this.getHelper().getPatientList().stream()
 				.filter(p -> p.getInhibitorStatus().equals(InhibitorStatus.YES)).collect(Collectors.toList());
-		System.out.println("Number of patients with inhibitors in the patient data:" + list.size());
+		System.out.println("Number of patients with inhibitors in the final patient data:" + list.size() + " of " + this.getHelper().getPatientList().size());
 
 	}
 

@@ -423,7 +423,7 @@ public class NovelSurfaceAnalyzer {
 
 		SequenceComparator sequenceComparator = new SequenceComparator();
 		sequenceComparator.setInputFileType(FastaFileType.UNIPROT);
-		sequenceComparator.setCompareFileType(FastaFileType.ENSEMBLPEP);
+		sequenceComparator.setCompareFileType(FastaFileType.UNIPROT);//compare proteome type
 
 		// read the compareDir and all the files as there might be more than one
 		List<Sequence> seq2List = new ArrayList<>();
@@ -433,7 +433,7 @@ public class NovelSurfaceAnalyzer {
 				// ignore the directory and continue, we want one compare file
 				continue;
 			}
-			List<Sequence> tempList = this.getSequenceFactory().getSequenceList(fileEntry, FastaFileType.ENSEMBLPEP);
+			List<Sequence> tempList = this.getSequenceFactory().getSequenceList(fileEntry, FastaFileType.UNIPROT);//compare proteome type
 			seq2List.addAll(tempList);
 		}
 
@@ -500,7 +500,7 @@ public class NovelSurfaceAnalyzer {
 								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039).*")) {
 					// do nothing
 				} else if (StringUtils.isNotEmpty(seq.getProteinId())
-						&& seq.getProteinId().startsWith("ENSP00000353393")) {
+						&& (seq.getProteinId().startsWith("ENSP00000353393") || seq.getProteinId().startsWith("P00451"))) {
 					// get the match start position from new protein id
 					// for variant 593 you have 612 as new variant pos meaning
 					// 611 index starting from 0
@@ -536,8 +536,7 @@ public class NovelSurfaceAnalyzer {
 								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039).*")) {
 					// do nothing
 				} else if (StringUtils.isNotEmpty(seq.getProteinId())
-						&& seq.getProteinId().startsWith("ENSP00000353393")) {
-
+						&& (seq.getProteinId().startsWith("ENSP00000353393") || seq.getProteinId().startsWith("P00451"))) {
 					// get the match start position from new protein id
 					// for variant 593 you have 612 as new variant pos meaning
 					// 611 index starting from 0
