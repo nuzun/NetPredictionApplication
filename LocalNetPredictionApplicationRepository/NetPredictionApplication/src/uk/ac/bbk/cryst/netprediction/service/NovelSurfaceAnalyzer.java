@@ -423,7 +423,7 @@ public class NovelSurfaceAnalyzer {
 
 		SequenceComparator sequenceComparator = new SequenceComparator();
 		sequenceComparator.setInputFileType(FastaFileType.UNIPROT);
-		sequenceComparator.setCompareFileType(FastaFileType.UNIPROT);//compare proteome type
+		sequenceComparator.setCompareFileType(FastaFileType.ENSEMBLPEP);//compare proteome type
 
 		// read the compareDir and all the files as there might be more than one
 		List<Sequence> seq2List = new ArrayList<>();
@@ -433,7 +433,7 @@ public class NovelSurfaceAnalyzer {
 				// ignore the directory and continue, we want one compare file
 				continue;
 			}
-			List<Sequence> tempList = this.getSequenceFactory().getSequenceList(fileEntry, FastaFileType.UNIPROT);//compare proteome type
+			List<Sequence> tempList = this.getSequenceFactory().getSequenceList(fileEntry, FastaFileType.ENSEMBLPEP);//compare proteome type
 			seq2List.addAll(tempList);
 		}
 

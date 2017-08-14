@@ -181,7 +181,7 @@ public class NovelSurfaceResultsProcessor {
 		String newLine = "\n";
 		content.add("allele");
 		for (String variant : this.getHelper().getHeatmapVariants()) {
-			content.add(variant);
+			content.add(variant.replace("-", ""));
 		}
 		String fullContent = content.toString() + newLine;
 
@@ -193,7 +193,7 @@ public class NovelSurfaceResultsProcessor {
 
 		for (String allele : this.getHelper().readAlleleFile(this.getPredictionType())) {
 			content = new StringJoiner(",");
-			content.add(allele);
+			content.add(getNomenclature(allele));
 
 			for (String variant : this.getHelper().getHeatmapVariants()) {
 				List<HeatMapBox> filteredList = boxList.stream()
@@ -222,6 +222,39 @@ public class NovelSurfaceResultsProcessor {
 				"data//output//heatmap_" + this.getPredictionType() + "_" + this.isProteomeScanningOn() + ".csv");
 		FileHelper.writeToFile(file, fullContent);
 
+	}
+
+	private CharSequence getNomenclature(String allele) {
+		// TODO Auto-generated method stub
+		Map<String, String> nomenclatureList = new HashMap<>();
+		nomenclatureList.put("HLA-DPA10103-DPB10201", "HLA-DPA1*01:03-DPB1*02:01");
+		nomenclatureList.put("HLA-DPA101-DPB10401", "HLA-DPA1*01-DPB1*04:01");
+		nomenclatureList.put("HLA-DPA10103-DPB10401", "HLA-DPA1*01:03-DPB1*04:01");
+		nomenclatureList.put("HLA-DPA10201-DPB10101", "HLA-DPA1*02:01-DPB1*01:01");
+		nomenclatureList.put("HLA-DPA10201-DPB10501", "HLA-DPA1*02:01-DPB1*05:01");
+		nomenclatureList.put("HLA-DPA10301-DPB10402", "HLA-DPA1*03:01-DPB1*04:02");
+		nomenclatureList.put("HLA-DQA10101-DQB10501", "HLA-DQA1*01:01-DQB1*05:01");
+		nomenclatureList.put("HLA-DQA10102-DQB10602", "HLA-DQA1*01:02-DQB1*06:02");
+		nomenclatureList.put("HLA-DQA10301-DQB10302", "HLA-DQA1*03:01-DQB1*03:02");
+		nomenclatureList.put("HLA-DQA10401-DQB10402", "HLA-DQA1*04:01-DQB1*04:02");
+		nomenclatureList.put("HLA-DQA10501-DQB10201", "HLA-DQA1*05:01-DQB1*02:01");
+		nomenclatureList.put("HLA-DQA10501-DQB10301", "HLA-DQA1*05:01-DQB1*03:01");
+		nomenclatureList.put("DRB1_0101", "HLA-DRB1*01:01");
+		nomenclatureList.put("DRB1_0301", "HLA-DRB1*03:01");
+		nomenclatureList.put("DRB1_0401", "HLA-DRB1*04:01");
+		nomenclatureList.put("DRB1_0404", "HLA-DRB1*04:04");
+		nomenclatureList.put("DRB1_0405", "HLA-DRB1*04:05");
+		nomenclatureList.put("DRB1_0701", "HLA-DRB1*07:01");
+		nomenclatureList.put("DRB1_0802", "HLA-DRB1*08:02");
+		nomenclatureList.put("DRB1_0901", "HLA-DRB1*09:01");
+		nomenclatureList.put("DRB1_1101", "HLA-DRB1*11:01");
+		nomenclatureList.put("DRB1_1302", "HLA-DRB1*13:02");
+		nomenclatureList.put("DRB1_1501", "HLA-DRB1*15:01");
+		nomenclatureList.put("DRB3_0101", "HLA-DRB3*01:01");
+		nomenclatureList.put("DRB4_0101", "HLA-DRB4*01:01");
+		nomenclatureList.put("DRB5_0101", "HLA-DRB5*01:01");
+
+		return nomenclatureList.get(allele);
 	}
 
 	private void createVariantFile(Float threshold) throws FileNotFoundException {
@@ -322,6 +355,7 @@ public class NovelSurfaceResultsProcessor {
 
 	public void printVariousStatistics() throws IOException {
 		Map<String, Integer> positionMap = new HashMap<>();
+		Set<String> uniqueVariantsWithInhibitors = new HashSet<>();
 
 		for (String variant : this.getHelper().getVariants()) {
 			String[] arr = variant.split("-");
@@ -342,11 +376,19 @@ public class NovelSurfaceResultsProcessor {
 
 		System.out.println("----------------------------------------------------------");
 
-		System.out.println("Number of variant positions with more than one mutation:" + counter);
+		System.out.println("Number of variant positions with more than one mutation: " + counter);
 
 		List<PatientData> list = this.getHelper().getPatientList().stream()
 				.filter(p -> p.getInhibitorStatus().equals(InhibitorStatus.YES)).collect(Collectors.toList());
-		System.out.println("Number of patients with inhibitors in the final patient data:" + list.size() + " of " + this.getHelper().getPatientList().size());
+		System.out.println("Number of patients with inhibitors in the final patient data: " + list.size() + " of "
+				+ this.getHelper().getPatientList().size());
+
+		for (PatientData p : list) {
+			uniqueVariantsWithInhibitors.add(p.getVariant());
+		}
+
+		System.out.println("Number of variants associated with at least one case of inhibitor formation: "
+				+ uniqueVariantsWithInhibitors.size() + " of " + list.size() + " cases.");
 
 	}
 
@@ -417,7 +459,12 @@ public class NovelSurfaceResultsProcessor {
 							&& p.getInhibitorStatus().equals(InhibitorStatus.YES) && include.contains(p.getVariant()))
 					.collect(Collectors.toList());
 			// printList(bList);
+			System.out.println("BBBBBBBBBBBBBBBBB");
 			System.out.println("B=" + bList.size());
+			for (PatientData p : bList) {
+				System.out.println(p);
+			}
+			System.out.println("BBBBBBBBBBBBBBBBB");
 
 			// C: Patients with inhibitors having a missense mutation for which
 			// we predict a risk of inhibitor

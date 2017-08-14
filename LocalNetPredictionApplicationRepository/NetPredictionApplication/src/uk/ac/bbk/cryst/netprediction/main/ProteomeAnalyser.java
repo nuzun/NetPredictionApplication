@@ -28,7 +28,6 @@ public class ProteomeAnalyser {
 	static List<Sequence> sequenceList = new ArrayList<>();
 	static List<String> sequenceIds = new ArrayList<>();
 
-
 	public static void main(String[] args) throws IOException {
 		processProteomeFile();
 		processLog();
@@ -47,7 +46,9 @@ public class ProteomeAnalyser {
 				// ignore the directory and continue, we want one compare file
 				continue;
 			}
-			List<Sequence> tempList = sequenceFactory.getSequenceList(fileEntry, FastaFileType.ENSEMBLPEP);//compare prot type
+			List<Sequence> tempList = sequenceFactory.getSequenceList(fileEntry, FastaFileType.ENSEMBLPEP);// compare
+																											// prot
+																											// type
 			sequenceList.addAll(tempList);
 		}
 
@@ -58,17 +59,19 @@ public class ProteomeAnalyser {
 		System.out.println("Total " + sequenceList.size() + " proteins in the proteome");
 
 		// how many total 9mers
-		int totalPeptides = 0;
-		for (Sequence seq : sequenceList) {
-			totalPeptides += PeptideGenerator.getAllPeptides(seq, nMer).size();
-		}
-		System.out.println("Total " + totalPeptides + " 9mers in the proteome");
+		//int totalPeptides = 0;
+		//for (Sequence seq : sequenceList) {
+		//	totalPeptides += PeptideGenerator.getAllPeptides(seq, nMer).size();
+		//}
+		//System.out.println("Total " + totalPeptides + " 9mers in the proteome");
 
 		// how many unique 9mers
-		//for (Sequence seq : sequenceList) {
-		//	uniquePeptideList.addAll(PeptideGenerator.getUniquePeptides(seq, nMer));
-		//}
-		//System.out.println("Total " + uniquePeptideList.size() + " unique 9mers in the proteome");
+		// for (Sequence seq : sequenceList) {
+		// uniquePeptideList.addAll(PeptideGenerator.getUniquePeptides(seq,
+		// nMer));
+		// }
+		// System.out.println("Total " + uniquePeptideList.size() + " unique
+		// 9mers in the proteome");
 
 	}
 
@@ -120,7 +123,7 @@ public class ProteomeAnalyser {
 						if (!matchMapByMutationOnly.keySet().contains(mutation)) {
 							matchMapByMutationOnly.put(mutation, new ArrayList<>());
 						}
-						
+
 					}
 				}
 
@@ -128,15 +131,15 @@ public class ProteomeAnalyser {
 					String pNameLine = scanner.nextLine();
 					String pName = "";
 					String proteinName = "";
-					
+
 					pName = pNameLine.replace("INFO: ", "");
 
-					if(pName.contains("_")){
+					if (pName.contains("_")) {
 						proteinName = pName.split("_")[0];
-					
-					 if (!sequenceIds.contains(proteinName)) {
-						 continue;
-					 }
+
+						if (!sequenceIds.contains(proteinName)) {
+							continue;
+						}
 
 						int toPrint = 0;
 
@@ -158,21 +161,25 @@ public class ProteomeAnalyser {
 									if (helper.getVariants().contains(mutation)) {
 										matchMapByMutationAndAllele.get(key).add(pName);
 										matchMapByMutationOnly.get(mutation).add(pName);
-										
-										if(proteomeMatchMap.keySet().contains(pName)){
-											proteomeMatchMap.put(pName,proteomeMatchMap.get(pName).intValue()+1);
-										}
-										else{
-											proteomeMatchMap.put(pName,1);
+
+										// if we want to do a sum instead of
+										// position speicific
+										// then use proteinName instead of pName
+										// +1 for each variant position, different core match and different position match 
+										if (proteomeMatchMap.keySet().contains(proteinName)) {
+											proteomeMatchMap.put(proteinName,
+													proteomeMatchMap.get(proteinName).intValue() + 1);
+										} else {
+											proteomeMatchMap.put(proteinName, 1);
 										}
 									}
 
 								}
 								break;
 							}
-						} //
-					
-				}
+						} //while
+
+					}
 
 				} // runProteomeCheck line
 
@@ -184,29 +191,25 @@ public class ProteomeAnalyser {
 
 			Comparator<Entry<String, ArrayList<String>>> byValue = Comparator.comparing(e -> e.getValue().size());
 
-			//matchMapByMutationAndAllele.entrySet().stream().sorted(byValue.reversed()).limit(10)
-				//	.forEach(System.out::println); 
+			// matchMapByMutationAndAllele.entrySet().stream().sorted(byValue.reversed()).limit(10)
+			// .forEach(System.out::println);
 			matchMapByMutationAndAllele.entrySet().stream().sorted(byValue.reversed()).limit(10)
-					.forEach(s -> System.out.println(s.getKey() + ":" + s.getValue().size())); 
-		
-			
+					.forEach(s -> System.out.println(s.getKey() + ":" + s.getValue().size()));
+
 			System.out.println("**********************************************************");
 
-			//matchMapByMutationOnly.entrySet().stream().sorted(byValue.reversed()).limit(10)
-				//	.forEach(System.out::println);
+			// matchMapByMutationOnly.entrySet().stream().sorted(byValue.reversed()).limit(10)
+			// .forEach(System.out::println);
 			matchMapByMutationOnly.entrySet().stream().sorted(byValue.reversed()).limit(10)
-			.forEach(s -> System.out.println(s.getKey() + ":" + s.getValue().size()));
-			
-			System.out.println("**********************************************************");
-			
+					.forEach(s -> System.out.println(s.getKey() + ":" + s.getValue().size()));
 
-			  Map<String, Integer> result =  proteomeMatchMap.entrySet().stream()
-		                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-		                .limit(20)
-		                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-		                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-			  System.out.println(result);
-		               
+			System.out.println("**********************************************************");
+
+			Map<String, Integer> result = proteomeMatchMap.entrySet().stream()
+					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).limit(50)
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue,
+							LinkedHashMap::new));
+			System.out.println(result);
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

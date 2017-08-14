@@ -12,7 +12,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 		try {
 
 			boolean onlyDR = false;
-			boolean protScan = true;
+			boolean protScan = false;
 			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(protScan, onlyDR,
 					PredictionType.MHCII); //createVariantFile prints square based stats in the const
 
