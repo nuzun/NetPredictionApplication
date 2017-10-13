@@ -90,7 +90,7 @@ public class Pool3Generator {
 	        for(BinderData binderPeptide : mhcBinders){
 	        	
 	        	NetPanData netPanData = findMatchingFile(binderPeptide.getProteinName(), binderPeptide.getUniprot_code(),binderPeptide.getAllele(),binderPeptide.getPeptide(),binderPeptide.getStartPosition());
-	        	CTLPeptideData ctlPeptide = (CTLPeptideData) netPanData.getSpecificPeptideData(binderPeptide.getPeptide(), binderPeptide.getStartPosition());
+	        	CTLPanPeptideData ctlPeptide = (CTLPanPeptideData) netPanData.getSpecificPeptideData(binderPeptide.getPeptide(), binderPeptide.getStartPosition());
 	        	
 	        	//allele,peptide,position,rank,mhcScore,IC50Score,tapScore,cleavageScore, combinedScore, rankPercentage,binderStatus,source
 	        	//Test the Object ref??????

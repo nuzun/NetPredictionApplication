@@ -24,7 +24,11 @@ public class NetPanCmd {
 
 		switch (type) {
 		case CTL:
-			scriptLine = properties.getValue("netCTLPanScript") + " " + scoreCode + " " + peptideLength + " " + allele
+			scriptLine = properties.getValue("netCTLScript") + " " + allele +  " " + sequenceFileFullPath
+			+ " " + scoreCode + " "+ outputFileFullPath;
+			break;
+		case CTLPAN:
+			scriptLine = properties.getValue("netCTLPanScript") + " " + allele + " " + peptideLength + " " + scoreCode
 					+ " " + sequenceFileFullPath + " " + outputFileFullPath;
 			break;
 		case MHCI:

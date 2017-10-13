@@ -11,7 +11,7 @@ public class NetPanFileReaderFactory {
 		switch (type){
 			case CTL:
 			case CTLPAN:
-				return new NetCTLPanReader(netFile,foundProteinNameAndId,foundAllele);
+				return new NetCTLReader(netFile,foundProteinNameAndId,foundAllele);
 			case MHCI:
 			case MHCIPAN:
 				return new NetMHCPanReader(netFile, foundProteinNameAndId, foundAllele);

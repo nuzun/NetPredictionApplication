@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
-import uk.ac.bbk.cryst.netprediction.model.CTLPeptideData;
+import uk.ac.bbk.cryst.netprediction.model.CTLPanPeptideData;
 import uk.ac.bbk.cryst.netprediction.model.NetCTLPanData;
 import uk.ac.bbk.cryst.netprediction.model.PeptideData;
 
@@ -22,6 +22,8 @@ public class NetCTLPanReader extends NetPanFileReader {
 	
 	public NetCTLPanData read() throws Exception{
 
+		//#  N   Sequence Name       Allele      Peptide      MHC      TAP      Cle     Comb  %Rank
+		//# 219 143B_BOVIN_(P29  HLA-A*02:01    QLLRDNLTL  0.42500  1.04100  0.97391  0.67015   3.00 
 		NetCTLPanData netCTLPanFileData = new NetCTLPanData(this.allele,this.fastaFileName);
 		String pattern = "\\s*(\\d+)\\s+.+" + //pos and sequence name
 				"\\s+([\\w:*-]+)" + //allele
@@ -65,7 +67,7 @@ public class NetCTLPanReader extends NetPanFileReader {
 		 			  epitopeCounter++;
 		 		   }
 		 		  
-		 		   PeptideData peptide = new CTLPeptideData(counter,Integer.valueOf(startPositionTxt), 
+		 		   PeptideData peptide = new CTLPanPeptideData(counter,Integer.valueOf(startPositionTxt), 
 		 				  peptideTxt, Float.valueOf(mhcScoreTxt), Float.valueOf(tapScoreTxt),Float.valueOf(cleavageScoreTxt),
 		 				  Float.valueOf(combScoreTxt),Float.valueOf(rankPercentageTxt), epitope);
 		 		   

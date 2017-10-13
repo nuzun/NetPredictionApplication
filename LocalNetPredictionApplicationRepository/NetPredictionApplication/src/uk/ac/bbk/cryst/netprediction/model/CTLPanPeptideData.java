@@ -3,11 +3,12 @@ package uk.ac.bbk.cryst.netprediction.model;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public class CTLPeptideData extends PeptideData {
+public class CTLPanPeptideData extends PeptideData {
 
 	Float tapScore;
 	Float cleavageScore;
 	Float combinedScore;
+	Float rankPercentage;
 	
 	public Float getTapScore() {
 		return tapScore;
@@ -18,9 +19,12 @@ public class CTLPeptideData extends PeptideData {
 	public Float getCombinedScore() {
 		return combinedScore;
 	}
+	public Float getRankPercentage() {
+		return rankPercentage;
+	}
 	
-	public CTLPeptideData(int rank, int startPosition,String peptide,Float mhcScore, Float cleavageScore,Float tapScore,
-			Float combinedScore, boolean epitope){
+	public CTLPanPeptideData(int rank, int startPosition,String peptide,Float mhcScore, Float tapScore, Float cleavageScore,
+			Float combinedScore, Float rankPercentage, boolean epitope){
 		this.rank = rank;
 		this.startPosition = startPosition;
 		this.peptide = peptide;
@@ -28,6 +32,7 @@ public class CTLPeptideData extends PeptideData {
 		this.tapScore = tapScore;
 		this.cleavageScore = cleavageScore;
 		this.combinedScore = combinedScore;
+		this.rankPercentage = rankPercentage;
 		this.epitope = epitope;
 		this.IC50Score = (float) Math.pow(50000, (1-mhcScore));
 		this.bindingLevel = this.isEpitope() ? "SB" : "";
@@ -58,6 +63,7 @@ public class CTLPeptideData extends PeptideData {
 			     this.getTapScore() + del +
 			     this.getCleavageScore() + del +
 			     this.getCombinedScore() + del +
+			     this.getRankPercentage() + del +
 			     this.getBindingLevel();
 	
 		return out;
@@ -75,6 +81,7 @@ public class CTLPeptideData extends PeptideData {
 	        builder.append(tapScore);
 	        builder.append(cleavageScore);
 	        builder.append(combinedScore);
+	        builder.append(rankPercentage);
 	        return builder.toHashCode();
 
 	 }
@@ -90,6 +97,7 @@ public class CTLPeptideData extends PeptideData {
            builder.append(this.tapScore, other.tapScore);
            builder.append(this.cleavageScore, other.cleavageScore);
            builder.append(this.combinedScore, other.combinedScore);
+           builder.append(this.rankPercentage, other.rankPercentage);
            return builder.isEquals();
        }
        return false;
