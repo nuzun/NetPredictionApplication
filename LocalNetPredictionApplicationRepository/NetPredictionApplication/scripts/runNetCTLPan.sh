@@ -40,7 +40,7 @@
 # 219 143B_BOVIN_(P29  HLA-A*02:01    QLLRDNLTL  0.42500  1.04100  0.97391  0.67015   3.00 
 
 
-#$1 = allele - DRB1_0101	
+#$1 = allele - HLA-A02:01 	
 #$2 = peptide length - 9
 #$3 = sort - 0
 #$4 = fasta seq - filename

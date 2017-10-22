@@ -102,30 +102,6 @@ public abstract class NetPanData implements Comparable<NetPanData> {
 		return peptideDataList;
 	}
 
-	/*
-	 * Ignore the panning peptides
-	 */
-	public List<MHCIIPeptideData> getSpecificPeptideDataByMaskedCore(String corePeptideStr, List<Integer> positions,
-			boolean isMatch, int panningPosition) {
-		List<MHCIIPeptideData> peptideDataList = new ArrayList<MHCIIPeptideData>();
-
-		int startIndex = panningPosition < this.getNMer() ? 0 : (panningPosition - this.getNMer());
-		int endIndex = (panningPosition + this.getNMer()) > this.getSequenceLength()
-				? (this.getSequenceLength() - this.getNMer()) : panningPosition - 1;
-
-		for (PeptideData peptideData : this.peptideList) {
-			if (peptideData instanceof MHCIIPeptideData) {
-				MHCIIPeptideData newPep = (MHCIIPeptideData) peptideData;
-				if (newPep.getStartPosition() >= startIndex && newPep.getStartPosition() <= endIndex) {
-					continue;
-				} else if (isMatch(newPep.getCorePeptide(), StringUtils.trim(corePeptideStr), positions, isMatch)) {
-					peptideDataList.add(newPep);
-				}
-			}
-		}
-		return peptideDataList;
-	}
-
 	public List<MHCIIPeptideData> getSpecificPeptideDataByMaskedCore(String corePeptideStr, List<Integer> positions,
 			boolean isMatch) {
 		List<MHCIIPeptideData> peptideDataList = new ArrayList<MHCIIPeptideData>();
@@ -136,6 +112,28 @@ public abstract class NetPanData implements Comparable<NetPanData> {
 
 				if (isMatch(newPep.getCorePeptide(), StringUtils.trim(corePeptideStr), positions, isMatch)) {
 					peptideDataList.add(newPep);
+				}
+			}
+		}
+		return peptideDataList;
+	}
+	
+	public List<PeptideData> getSpecificPeptideDataByMaskedMatch(String corePeptideStr, List<Integer> positions,
+			boolean isMatch) {
+		List<PeptideData> peptideDataList = new ArrayList<PeptideData>();
+
+		for (PeptideData peptideData : this.peptideList) {
+			if (peptideData instanceof MHCIIPeptideData) {
+				MHCIIPeptideData newPep = (MHCIIPeptideData) peptideData;
+
+				if (isMatch(newPep.getCorePeptide(), StringUtils.trim(corePeptideStr), positions, isMatch)) {
+					peptideDataList.add(newPep);
+				}
+			}
+			
+			else{
+				if (isMatch(peptideData.getPeptide(), StringUtils.trim(corePeptideStr), positions, isMatch)) {
+					peptideDataList.add(peptideData);
 				}
 			}
 		}

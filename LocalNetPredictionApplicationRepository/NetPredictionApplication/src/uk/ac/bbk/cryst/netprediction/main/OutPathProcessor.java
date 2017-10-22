@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
+
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.model.NetPanData;
@@ -15,8 +17,13 @@ public class OutPathProcessor {
 
 	public static void main(String[] args) throws Exception {
 
-		File pathToRead = new File(properties.getValue("testOutputFullPathMHCII"));
-		PredictionType type = PredictionType.MHCII;
+		String sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
+		File sequenceFile = new File(sequenceFileFullPath);
+		// ebv_P03206.fasta
+		String fileName = FilenameUtils.removeExtension(sequenceFile.getName());
+		
+		File pathToRead = new File(properties.getValue("outputPathCTLPan") + fileName + "/");
+		PredictionType type = PredictionType.CTLPAN;
 		NetPanDataBuilder builder = new NetPanDataBuilder(type);
 		List<NetPanData> netPanDataList = new ArrayList<>();
 
@@ -32,7 +39,8 @@ public class OutPathProcessor {
 				
 			}
 		} // for
-		printAll(netPanDataList);
+		printEpitopes(netPanDataList);
+		//printAll(netPanDataList);
 	}
 
 	private static void printEpitopes(List<NetPanData> netPanDataList) {
