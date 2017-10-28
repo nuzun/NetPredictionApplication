@@ -59,12 +59,12 @@ public class NovelSurfaceAnalyzer {
 	SequenceFactory sequenceFactory;
 
 	String variantSequencePath;
-	String comparePath;
 	String tmpSequencePath;
 	String proteomeSequencePath;
 
 	String alleleFileFullPath;
 	String sequenceFileFullPath;
+	String compareFileFullPath;
 	String mutationFileFullPath;
 
 	String variantOutputFullPath;
@@ -95,10 +95,6 @@ public class NovelSurfaceAnalyzer {
 		return proteomeOutputFullPath;
 	}
 
-	public String getComparePath() {
-		return comparePath;
-	}
-
 	public String getVariantSequencePath() {
 		return variantSequencePath;
 	}
@@ -109,6 +105,10 @@ public class NovelSurfaceAnalyzer {
 
 	public String getSequenceFileFullPath() {
 		return sequenceFileFullPath;
+	}
+
+	public String getCompareFileFullPath() {
+		return compareFileFullPath;
 	}
 
 	public String getVariantOutputFullPath() {
@@ -202,7 +202,7 @@ public class NovelSurfaceAnalyzer {
 		sequenceFileName = properties.getValue("sequenceFileName");
 		alleleFileFullPath = properties.getValue("alleleFileFullPath");
 		sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
-		comparePath = properties.getValue("comparePath");
+		compareFileFullPath = properties.getValue("compareFileFullPath");
 		tmpSequencePath = properties.getValue("tmpSequencePath");
 		proteomeSequencePath = properties.getValue("proteomeSequencePath");
 		variantSequencePath = properties.getValue("variantSequencePath");
@@ -423,19 +423,17 @@ public class NovelSurfaceAnalyzer {
 
 		SequenceComparator sequenceComparator = new SequenceComparator();
 		sequenceComparator.setInputFileType(FastaFileType.UNIPROT);
-		sequenceComparator.setCompareFileType(FastaFileType.ENSEMBLPEP);//compare proteome type
+		sequenceComparator.setCompareFileType(FastaFileType.ENSEMBLPEP);// compare
+																		// proteome
+																		// type
 
 		// read the compareDir and all the files as there might be more than one
 		List<Sequence> seq2List = new ArrayList<>();
-		File compareDir = new File(this.getComparePath());
-		for (final File fileEntry : compareDir.listFiles()) {
-			if (fileEntry.isDirectory()) {
-				// ignore the directory and continue, we want one compare file
-				continue;
-			}
-			List<Sequence> tempList = this.getSequenceFactory().getSequenceList(fileEntry, FastaFileType.ENSEMBLPEP);//compare proteome type
-			seq2List.addAll(tempList);
-		}
+		File compareFileFullPath = new File(this.getCompareFileFullPath());
+
+		List<Sequence> tempList = this.getSequenceFactory().getSequenceList(compareFileFullPath,
+				FastaFileType.ENSEMBLPEP);// compare proteome type
+		seq2List.addAll(tempList);
 
 		NovelPeptideSurface novel = new NovelPeptideSurface();
 		novel.setAllele(allele);
@@ -500,7 +498,8 @@ public class NovelSurfaceAnalyzer {
 								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039).*")) {
 					// do nothing
 				} else if (StringUtils.isNotEmpty(seq.getProteinId())
-						&& (seq.getProteinId().startsWith("ENSP00000353393") || seq.getProteinId().startsWith("P00451"))) {
+						&& (seq.getProteinId().startsWith("ENSP00000353393")
+								|| seq.getProteinId().startsWith("P00451"))) {
 					// get the match start position from new protein id
 					// for variant 593 you have 612 as new variant pos meaning
 					// 611 index starting from 0
@@ -536,7 +535,8 @@ public class NovelSurfaceAnalyzer {
 								+ "ENSP00000409446|ENSP00000469822|ENSP00000389153|ENSP00000469039).*")) {
 					// do nothing
 				} else if (StringUtils.isNotEmpty(seq.getProteinId())
-						&& (seq.getProteinId().startsWith("ENSP00000353393") || seq.getProteinId().startsWith("P00451"))) {
+						&& (seq.getProteinId().startsWith("ENSP00000353393")
+								|| seq.getProteinId().startsWith("P00451"))) {
 					// get the match start position from new protein id
 					// for variant 593 you have 612 as new variant pos meaning
 					// 611 index starting from 0

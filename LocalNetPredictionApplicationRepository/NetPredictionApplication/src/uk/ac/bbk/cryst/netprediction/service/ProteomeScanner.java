@@ -27,24 +27,43 @@ import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;
 public class ProteomeScanner {
 
 	PredictionType type;
+	FastaFileType inputType;
+	FastaFileType compareType;
 	int nMer;
 	int IC50_threshold;
 	String scoreCode;
 	List<Integer> anchorPositions;
 	PropertiesHelper properties;
 	String sequenceFileName;
+	String compareFileName;
 	SequenceFactory sequenceFactory;
 
-	String comparePath;
 	String tmpSequencePath;
 	String proteomeSequencePath;
 	String alleleFileFullPath;
 	String sequenceFileFullPath;
+	String compareFileFullPath;
 
 	String proteomeOutputPath;
 
 	public PredictionType getType() {
 		return type;
+	}
+
+	public FastaFileType getInputType() {
+		return inputType;
+	}
+
+	public void setInputType(FastaFileType inputType) {
+		this.inputType = inputType;
+	}
+
+	public FastaFileType getCompareType() {
+		return compareType;
+	}
+
+	public void setCompareType(FastaFileType compareType) {
+		this.compareType = compareType;
 	}
 
 	public void setType(PredictionType type) {
@@ -99,20 +118,28 @@ public class ProteomeScanner {
 		this.sequenceFileName = sequenceFileName;
 	}
 
+	public String getCompareFileName() {
+		return compareFileName;
+	}
+
+	public void setCompareFileName(String compareFileName) {
+		this.compareFileName = compareFileName;
+	}
+
+	public String getCompareFileFullPath() {
+		return compareFileFullPath;
+	}
+
+	public void setCompareFileFullPath(String compareFileFullPath) {
+		this.compareFileFullPath = compareFileFullPath;
+	}
+
 	public SequenceFactory getSequenceFactory() {
 		return sequenceFactory;
 	}
 
 	public void setSequenceFactory(SequenceFactory sequenceFactory) {
 		this.sequenceFactory = sequenceFactory;
-	}
-
-	public String getComparePath() {
-		return comparePath;
-	}
-
-	public void setComparePath(String comparePath) {
-		this.comparePath = comparePath;
 	}
 
 	public String getTmpSequencePath() {
@@ -155,21 +182,24 @@ public class ProteomeScanner {
 		this.proteomeOutputPath = proteomeOutputPath;
 	}
 
-	public ProteomeScanner(PredictionType type) {
+	public ProteomeScanner(PredictionType type, FastaFileType inputType, FastaFileType compareType) {
 		this.type = type;
 		this.nMer = 9;
 		this.IC50_threshold = 1000;
 		this.anchorPositions = Arrays.asList(1, 2, 3, 9);
 		this.scoreCode = "0";
+		this.inputType = inputType;
+		this.compareType = compareType;
 
 		properties = new PropertiesHelper();
 		sequenceFactory = new SequenceFactory();
 
 		try {
 			sequenceFileName = properties.getValue("sequenceFileName");
+			compareFileName = properties.getValue("compareFileName");
 			alleleFileFullPath = properties.getValue("alleleFileFullPath");
 			sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
-			comparePath = properties.getValue("comparePath");
+			compareFileFullPath = properties.getValue("compareFileFullPath");
 			tmpSequencePath = properties.getValue("tmpSequencePath");
 			proteomeSequencePath = properties.getValue("proteomeSequencePath");
 
@@ -203,19 +233,15 @@ public class ProteomeScanner {
 			AlleleGroupData groupData = new AlleleGroupDataDaoImpl(this.getAlleleFileFullPath()).getGroupData();
 			// Read the sequence file test_P00451.fasta
 			File sequenceFile = new File(this.getSequenceFileFullPath());
-			Sequence inputSequence = this.getSequenceFactory().getSequenceList(sequenceFile, FastaFileType.UNIPROT)
+			Sequence inputSequence = this.getSequenceFactory().getSequenceList(sequenceFile, this.getInputType())
 					.get(0);
-			
+
 			List<Sequence> seq2List = new ArrayList<>();
-			File compareDir = new File(this.getComparePath());
-			for (final File fileEntry : compareDir.listFiles()) {
-				if (fileEntry.isDirectory()) {
-					// ignore the directory and continue, we want one compare file
-					continue;
-				}
-				List<Sequence> tempList = this.getSequenceFactory().getSequenceList(fileEntry, FastaFileType.ENSEMBLPEP);//compare proteome type
-				seq2List.addAll(tempList);
-			}
+			File compareFile = new File(this.getCompareFileFullPath());
+			List<Sequence> tempList = this.getSequenceFactory().getSequenceList(compareFile, this.getCompareType());// compare
+																													// proteome
+																													// type
+			seq2List.addAll(tempList);
 
 			for (String allele : groupData.getAlleleMap().keySet()) {
 				scan(allele, PeptideGenerator.getAllPeptides(inputSequence, this.getnMer()), seq2List);
@@ -233,13 +259,13 @@ public class ProteomeScanner {
 		boolean isMatch = false;
 		List<Sequence> matchList = new ArrayList<Sequence>();
 		List<PeptideData> matchingPeptides = new ArrayList<PeptideData>();
-		
+
 		try {
 
 			NetPanDataBuilder builder = new NetPanDataBuilder(this.getType());
 			SequenceComparator sequenceComparator = new SequenceComparator();
-			sequenceComparator.setInputFileType(FastaFileType.UNIPROT);
-			sequenceComparator.setCompareFileType(FastaFileType.ENSEMBLPEP);
+			sequenceComparator.setInputFileType(this.getInputType());
+			sequenceComparator.setCompareFileType(this.getCompareType());
 
 			for (String peptide : allPeptides) {
 				String tmpSequencePath = this.getTmpSequencePath();
@@ -249,42 +275,44 @@ public class ProteomeScanner {
 				File tmpSeqFile = new File(tmpSequencePath + tmpFileName);
 				FileUtils.writeStringToFile(tmpSeqFile, tmpSeqFileFullContent, CharEncoding.UTF_8);
 
-				matchList = sequenceComparator.runMatchFinder(tmpSeqFile, seq2List, this.getAnchorPositions(),
-						isMatch, this.getnMer());
-				
-				for (Sequence seq : matchList) {
-					String proteomeSeqFileFullContent = ">sp|" + seq.getProteinId() + "\n" + seq.getSequence();
-					String proteomeSeqFileName = seq.getProteinId() + ".fasta";
-					File proteomeSeqFile = new File(this.getProteomeSequencePath() + proteomeSeqFileName);
+				matchList = sequenceComparator.runMatchFinder(tmpSeqFile, seq2List, this.getAnchorPositions(), isMatch,
+						this.getnMer());
 
-					if (!proteomeSeqFile.exists()) {
-						FileHelper.writeToFile(proteomeSeqFile, proteomeSeqFileFullContent);
-					}
+					for (Sequence seq : matchList) {
+						String proteomeSeqFileFullContent = ">sp|" + seq.getProteinId() + "\n" + seq.getSequence();
+						String proteomeSeqFileName = seq.getProteinId() + ".fasta";
+						File proteomeSeqFile = new File(this.getProteomeSequencePath() + proteomeSeqFileName);
 
-					String proteomeOutputFilePath = this.getProteomeOutputPath()
-							+ FilenameUtils.removeExtension(proteomeSeqFileName) + "_" + allele + ".txt";
-					File proteomeScoreFileToCreate = new File(proteomeOutputFilePath);
-					if (!proteomeScoreFileToCreate.exists()) {
-						NetPanCmd.run(this.getType(), this.getScoreCode(), String.valueOf(this.getnMer()), allele,
-								proteomeSeqFile.getPath(), proteomeOutputFilePath);
-					}
-					NetPanData protNetPanData = builder.buildSingleFileData(new File(proteomeOutputFilePath));
+						if (!proteomeSeqFile.exists()) {
+							FileHelper.writeToFile(proteomeSeqFile, proteomeSeqFileFullContent);
+						}
 
-					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedMatch(
-							peptide, this.getAnchorPositions(), isMatch));
-					
-					for(PeptideData match : matchingPeptides){
-						if(match.getIC50Score() < this.getIC50_threshold()){
-							//we have a match in proteome with sufficient binding
-							System.out.println("ALLELE:" + allele + " PEPTIDE:" + peptide);
-							System.out.println("MATCH SEQ:" + seq.getProteinId());
-							System.out.println(match.toString());
+						String proteomeOutputFilePath = this.getProteomeOutputPath()
+								+ FilenameUtils.removeExtension(proteomeSeqFileName) + "_" + allele + ".txt";
+						File proteomeScoreFileToCreate = new File(proteomeOutputFilePath);
+						if (!proteomeScoreFileToCreate.exists()) {
+							NetPanCmd.run(this.getType(), this.getScoreCode(), String.valueOf(this.getnMer()), allele,
+									proteomeSeqFile.getPath(), proteomeOutputFilePath);
+						}
+						NetPanData protNetPanData = builder.buildSingleFileData(new File(proteomeOutputFilePath));
+
+						matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedMatch(peptide,
+								this.getAnchorPositions(), isMatch));
+
+						for (PeptideData match : matchingPeptides) {
+							if (match.getIC50Score() < this.getIC50_threshold()) {
+								// we have a match in proteome with sufficient
+								// binding
+								System.out.println("ALLELE:" + allele + " PEPTIDE:" + peptide);
+								System.out.println("MATCH SEQ:" + seq.getProteinId());
+								System.out.println(match.toString());
+							}
 						}
 					}
-				}
 
-			}
-		} catch ( Exception e) {
+				}
+			
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

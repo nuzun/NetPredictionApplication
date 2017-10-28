@@ -170,7 +170,7 @@ public class SequenceComparator {
 	/*
 	 * prints the results to a csv file
 	 */
-	public void runMatchFinder(File inputFile, String comparePath, String outPath, List<Integer> positions,
+	public void runMatchFinder(File inputFile, List<Sequence> seq2List, String outPath, List<Integer> positions,
 			boolean isMatch, int kmer) throws IOException {
 
 		SequenceFactory sequenceFactory = new SequenceFactory();
@@ -178,16 +178,7 @@ public class SequenceComparator {
 		// first file
 		Sequence seq1 = sequenceFactory.getSequenceList(inputFile, inputFileType).get(0);
 
-		// read the compareDir and all the files as there might be more than one
-		File compareDir = new File(comparePath);
-		for (final File fileEntry : compareDir.listFiles()) {
-			List<Sequence> tempList = sequenceFactory.getSequenceList(fileEntry, compareFileType);
-			seq2List.addAll(tempList);
-		}
-
 		// copy the results to a csv file in the csv path
-		// fileNameDescription =
-		// FileOperationsHelper.trimFileName(fileNameDescription);
 		File outFile = new File(
 				outPath + seq1.getProteinId() + "_" + kmer + "_vs_" + generatePositionStr(positions) + ".csv");
 
