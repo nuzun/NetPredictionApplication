@@ -2,7 +2,6 @@ package uk.ac.bbk.cryst.sequenceanalysis.main;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,13 +20,15 @@ public class SequenceScannerMain {
 	static SequenceAnalysisProperties properties = new SequenceAnalysisProperties();
 	static SequenceFactory sequenceFactory = new SequenceFactory();
 	static int kmer = 9;
-	static boolean isMatch = false;// pos 2 and 9 do not have to match so cond=false
-	static List<Integer> positions = Arrays.asList(2,9);
+	static boolean isMatch = false;// pos 2 and 9 do not have to match so
+									// cond=false
+	static List<Integer> positions = Arrays.asList(2, 9);
 	static String sequenceFileFullPath;
 	static String compareFileFullPath;
 	static FastaFileType inputType;
 	static FastaFileType compareType;
 	static String outputPath;
+
 	/**
 	 * 
 	 * put your first file into the input/ put your other files to compare into
@@ -47,23 +48,25 @@ public class SequenceScannerMain {
 		compareFileFullPath = properties.getValue("compareFileFullPath");
 		outputPath = properties.getValue("outputPath");
 		scanFile();
-		//scanPeptide();
+		// scanPeptide();
 
 	}
 
 	static void scanFile() throws IOException {
 
-		File sequenceFile = new File(sequenceFileFullPath); 
-
 		SequenceComparator sequenceComparator = new SequenceComparator();
 		sequenceComparator.setInputFileType(inputType);
 		sequenceComparator.setCompareFileType(compareType);
 
-		List<Sequence> seq2List = new ArrayList<>();
+		File sequenceFile = new File(sequenceFileFullPath);
+		List<Sequence> seq1List = sequenceFactory.getSequenceList(sequenceFile, inputType);
+
 		File compareFile = new File(compareFileFullPath);
-		List<Sequence> tempList = sequenceFactory.getSequenceList(compareFile, compareType);// compare
-																							// proteome																										// type
-		seq2List.addAll(tempList);
+		List<Sequence> seq2List = sequenceFactory.getSequenceList(compareFile, compareType);// compare
+																							// proteome
+																							// //
+																							// type
+
 		try {
 			CustomLogger.setup();
 		} catch (IOException e) {
@@ -71,7 +74,9 @@ public class SequenceScannerMain {
 			throw new RuntimeException("Problems with creating the log files");
 		}
 
-		sequenceComparator.runMatchFinder(sequenceFile, seq2List, outputPath, positions, isMatch, kmer);
+		for (Sequence seq1 : seq1List) {
+			sequenceComparator.runMatchFinder(seq1, seq2List, outputPath, positions, isMatch, kmer);
+		}
 
 	}
 
@@ -82,18 +87,19 @@ public class SequenceScannerMain {
 		String tmpSeqFileFullContent = ">sp|" + "temp|temp" + "\n" + peptideSequence;
 		String tmpFileName = "temp.fasta";
 
-		File tmpSeqFile = new File(tmpPath + tmpFileName);
-		FileUtils.writeStringToFile(tmpSeqFile, tmpSeqFileFullContent, CharEncoding.UTF_8);
-
 		SequenceComparator sequenceComparator = new SequenceComparator();
 		sequenceComparator.setInputFileType(inputType);
 		sequenceComparator.setCompareFileType(compareType);
-		
-		List<Sequence> seq2List = new ArrayList<>();
+
+		File tmpSeqFile = new File(tmpPath + tmpFileName);
+		FileUtils.writeStringToFile(tmpSeqFile, tmpSeqFileFullContent, CharEncoding.UTF_8);
+		Sequence seq1 = sequenceFactory.getSequenceList(tmpSeqFile, inputType).get(0);
+
 		File compareFile = new File(compareFileFullPath);
-		List<Sequence> tempList = sequenceFactory.getSequenceList(compareFile, compareType);// compare
-																							// proteome																										// type
-		seq2List.addAll(tempList);
+		List<Sequence> seq2List = sequenceFactory.getSequenceList(compareFile, compareType);// compare
+																							// proteome
+																							// //
+																							// type
 
 		try {
 			CustomLogger.setup();
@@ -102,7 +108,7 @@ public class SequenceScannerMain {
 			throw new RuntimeException("Problems with creating the log files");
 		}
 
-		sequenceComparator.runMatchFinder(tmpSeqFile, seq2List, outputPath, positions, isMatch, kmer);
+		sequenceComparator.runMatchFinder(seq1, seq2List, outputPath, positions, isMatch, kmer);
 
 	}
 

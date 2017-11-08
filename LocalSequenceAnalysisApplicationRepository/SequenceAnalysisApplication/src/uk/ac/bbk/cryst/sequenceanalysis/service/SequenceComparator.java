@@ -82,7 +82,7 @@ public class SequenceComparator {
 			// name the sequence with its original name_match position
 			for (MatchData match : matchMap) {
 				int matchPosition = match.getPosition2();
-				String panningSeq = seq2.getPanningSequence(matchPosition + 1, 15);// need
+				String panningSeq = seq2.getPanningSequence(matchPosition + 1, kmer);// need
 																					// to
 																					// pass
 																					// +1
@@ -103,7 +103,55 @@ public class SequenceComparator {
 		return matchList;
 
 	}
+	
 
+	public List<Sequence> runMatchFinder(Sequence inputSequence, List<Sequence> seq2List, List<Integer> positions,
+			boolean isMatch, int kmer) throws IOException {
+		List<Sequence> matchList = new ArrayList<Sequence>();
+
+		// compare seq1 to each seq2,
+		for (Sequence seq2 : seq2List) {
+
+			List<MatchData> matchMap = SequenceComparator.generateMatchMap(inputSequence, seq2, positions, isMatch, kmer);
+
+			if (SequenceComparator.isIdentical(inputSequence, seq2)) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = IDENTICAL");
+				continue;
+			}
+
+			if (matchMap.size() == 0) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = NO MATCHES");
+				continue;
+			}
+
+			// instead of adding the full sequence just get the panning sequence
+			// name the sequence with its original name_match position
+			for (MatchData match : matchMap) {
+				int matchPosition = match.getPosition2();
+				String panningSeq = seq2.getPanningSequence(matchPosition + 1, kmer);// need
+																					// to
+																					// pass
+																					// +1
+																					// as
+																					// the
+																					// panning
+																					// function
+																					// starts
+																					// from
+																					// 1
+				String newId = seq2.getProteinId() + "_" + matchPosition;
+				Sequence newSeq = new Sequence(newId, panningSeq) {
+				};
+				matchList.add(newSeq);
+			}
+
+		}
+		return matchList;
+
+	}
+	
 	/**
 	 * We pass the comparePath and read the list in the method
 	 * 
@@ -156,7 +204,7 @@ public class SequenceComparator {
 			// name the sequence with its original name_match position
 			for (MatchData match : matchMap) {
 				int matchPosition = match.getPosition2();
-				String panningSeq = seq2.getPanningSequence(matchPosition + 1, 15);
+				String panningSeq = seq2.getPanningSequence(matchPosition + 1, kmer);
 				String newId = seq2.getProteinId() + "_" + matchPosition;
 				Sequence newSeq = new Sequence(newId, panningSeq) {
 				};
@@ -170,14 +218,9 @@ public class SequenceComparator {
 	/*
 	 * prints the results to a csv file
 	 */
-	public void runMatchFinder(File inputFile, List<Sequence> seq2List, String outPath, List<Integer> positions,
+	public void runMatchFinder(Sequence seq1, List<Sequence> seq2List, String outPath, List<Integer> positions,
 			boolean isMatch, int kmer) throws IOException {
-
-		SequenceFactory sequenceFactory = new SequenceFactory();
-		// read the dir and the first file as we know there is only one for the
-		// first file
-		Sequence seq1 = sequenceFactory.getSequenceList(inputFile, inputFileType).get(0);
-
+		
 		// copy the results to a csv file in the csv path
 		File outFile = new File(
 				outPath + seq1.getProteinId() + "_" + kmer + "_vs_" + generatePositionStr(positions) + ".csv");
@@ -226,6 +269,34 @@ public class SequenceComparator {
 		bw.close();
 	}
 
+	public List<MatchData> getMatchData(Sequence seq1, List<Sequence> seq2List, List<Integer> positions,
+			boolean isMatch, int kmer) throws IOException {
+
+		List<MatchData> matchMap = new ArrayList<>();
+		List<MatchData> tmpMap = new ArrayList<>();
+		// compare seq1 to each seq2,
+		for (Sequence seq2 : seq2List) {
+
+			tmpMap = SequenceComparator.generateMatchMap(seq1, seq2, positions, isMatch, kmer);
+
+			if (SequenceComparator.isIdentical(seq1, seq2)) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = IDENTICAL");
+				continue;
+			}
+
+			if (tmpMap.size() == 0) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = NO MATCHES");
+				continue;
+			}
+			
+			matchMap.addAll(tmpMap);
+		}
+		return matchMap;
+		
+	}
+	
 	private static String generatePositionStr(List<Integer> positions) {
 		String positionToStr = "";
 		for (int pos : positions) {
