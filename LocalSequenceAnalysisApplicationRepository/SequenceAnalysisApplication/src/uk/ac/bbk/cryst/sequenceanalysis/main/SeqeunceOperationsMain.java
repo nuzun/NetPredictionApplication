@@ -1,8 +1,16 @@
 package uk.ac.bbk.cryst.sequenceanalysis.main;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
+import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
 import uk.ac.bbk.cryst.sequenceanalysis.common.SequenceAnalysisProperties;
+import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
+import uk.ac.bbk.cryst.sequenceanalysis.model.UniProtSequence;
+import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceComparator;
+import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;
+import uk.ac.bbk.cryst.sequenceanalysis.util.SequenceOperationsHelper;
 
 public class SeqeunceOperationsMain {
 
@@ -13,32 +21,29 @@ public class SeqeunceOperationsMain {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		
-		
+				
 		SequenceAnalysisProperties programProperties = new SequenceAnalysisProperties();
 
-		//File file1 = new File(programProperties.getValue("inputPath") + "survivin_O15392.fasta"); 		 	
-	 	
-		//passed!
-		//File file1 = new File(programProperties.getValue("inputPath") + "test/test12.fasta"); 	
-	 	//File file2 = new File(programProperties.getValue("inputPath") + "test/test12_org.fasta");
+		SequenceFactory sequenceFactory = new SequenceFactory();
 		
-		//UniProtSequence seq1 = SequenceFactory.readFile(file1).get(0);
-	 	//Sequence seq2 = FastaFileReader.readFile(file2).get(0);
+	
+		//File file1 = new File(programProperties.getValue("inputPath") + "test/test1_peptide.fasta"); 	
+	 	File file2 = new File(programProperties.getValue("sequenceFileFullPath"));
 		
-	 	/* Sequence compare
-	 	if(SequenceOperationsHelper.isIdentical(seq1, seq2)){
-	 		System.out.println("IDENTICAL");
-	 	}
-	 	else{
-	 		System.out.println("NOT--------IDENTICAL");
-	 	}
-		*/
+		//Sequence seq1 = sequenceFactory.getSequence(file1, FastaFileType.UNIPROT);
+		List<Sequence> seq2List = sequenceFactory.getSequenceList(file2, FastaFileType.UNIPROT);
+
+		for(Sequence seq : seq2List){
+			System.out.println(seq.getProteinId());
+			System.out.println(seq.getSequence());
+			System.out.println("==========================================================================");
+		}
+		
 		
 		//Generates position numbers starting from 1
 		//SequenceOperationsHelper.generatePositionNumbers(seq1);
 		
-		System.out.println("==========================================================================");
+		//System.out.println("==========================================================================");
 		//will provide the position in the map starting from 1 so directly provide the numbers
 		//from 1000genomes or cosmic
 		//Map<Integer,Character> changeMap = new HashMap<Integer, Character>();

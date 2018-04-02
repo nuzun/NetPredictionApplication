@@ -261,7 +261,7 @@ public class SequenceComparator {
 			for (MatchData match : matchMap) {
 				bw.write(match.toStringOnlyValues());
 				bw.newLine();
-				System.out.println(match.toStringOnlyValues());
+				//System.out.println(match.toStringOnlyValues());
 			}
 
 		}

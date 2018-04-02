@@ -22,7 +22,7 @@ public class SequenceScannerMain {
 	static int kmer = 9;
 	static boolean isMatch = false;// pos 2 and 9 do not have to match so
 									// cond=false
-	static List<Integer> positions = Arrays.asList(2, 9);
+	static List<Integer> positions = Arrays.asList(2,kmer);
 	static String sequenceFileFullPath;
 	static String compareFileFullPath;
 	static FastaFileType inputType;
@@ -42,13 +42,13 @@ public class SequenceScannerMain {
 	 *
 	 */
 	public static void main(String[] args) throws Exception {
-		inputType = FastaFileType.UNIPROT;
+		inputType = FastaFileType.HLA;
 		compareType = FastaFileType.ENSEMBLPEP;
 		sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
 		compareFileFullPath = properties.getValue("compareFileFullPath");
 		outputPath = properties.getValue("outputPath");
 		scanFile();
-		// scanPeptide();
+		// scanPeptide("YYYSYQHFY");
 
 	}
 
@@ -62,10 +62,9 @@ public class SequenceScannerMain {
 		List<Sequence> seq1List = sequenceFactory.getSequenceList(sequenceFile, inputType);
 
 		File compareFile = new File(compareFileFullPath);
-		List<Sequence> seq2List = sequenceFactory.getSequenceList(compareFile, compareType);// compare
-																							// proteome
-																							// //
-																							// type
+		List<Sequence> seq2List = sequenceFactory.getSequenceList(compareFile, compareType);
+
+		System.out.println("INPUT/COMPARE FILES:" + sequenceFile.getName() + "/" + compareFile.getName());
 
 		try {
 			CustomLogger.setup();
@@ -80,9 +79,8 @@ public class SequenceScannerMain {
 
 	}
 
-	static void scanPeptide() throws IOException {
+	static void scanPeptide(String peptideSequence) throws IOException {
 
-		String peptideSequence = "YYYSYQHFY";
 		String tmpPath = properties.getValue("tmpPath");
 		String tmpSeqFileFullContent = ">sp|" + "temp|temp" + "\n" + peptideSequence;
 		String tmpFileName = "temp.fasta";
@@ -96,10 +94,7 @@ public class SequenceScannerMain {
 		Sequence seq1 = sequenceFactory.getSequenceList(tmpSeqFile, inputType).get(0);
 
 		File compareFile = new File(compareFileFullPath);
-		List<Sequence> seq2List = sequenceFactory.getSequenceList(compareFile, compareType);// compare
-																							// proteome
-																							// //
-																							// type
+		List<Sequence> seq2List = sequenceFactory.getSequenceList(compareFile, compareType);
 
 		try {
 			CustomLogger.setup();

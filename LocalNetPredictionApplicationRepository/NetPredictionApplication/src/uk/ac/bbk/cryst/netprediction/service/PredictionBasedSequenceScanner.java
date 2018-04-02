@@ -177,11 +177,11 @@ public class PredictionBasedSequenceScanner {
 		this.predictionOutputPath = predictionOutputPath;
 	}
 
-	public PredictionBasedSequenceScanner(PredictionType type, FastaFileType inputType, FastaFileType compareType) {
+	public PredictionBasedSequenceScanner(PredictionType type, FastaFileType inputType, FastaFileType compareType, int nMer) {
 		this.type = type;
-		this.nMer = 9;
-		this.IC50_threshold = 1000;
-		this.anchorPositions = Arrays.asList(1, 2, 3, 9);
+		this.nMer = nMer;
+		this.IC50_threshold = 500;
+		this.anchorPositions = Arrays.asList(1,2,3,nMer);
 		this.scoreCode = "0";
 		this.inputType = inputType;
 		this.compareType = compareType;
@@ -221,6 +221,8 @@ public class PredictionBasedSequenceScanner {
 
 			File compareFile = new File(this.getCompareFileFullPath());
 			seq2List = this.getSequenceFactory().getSequenceList(compareFile, this.getCompareType());
+			
+			System.out.println("INPUT/COMPARE FILES:" + sequenceFile.getName() + "/" + compareFile.getName());
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -244,6 +246,7 @@ public class PredictionBasedSequenceScanner {
 
 					List<MatchData> matchDataList = sequenceComparator.getMatchData(seq1, seq2List,
 							this.getAnchorPositions(), this.isMatch(), this.getnMer());
+				
 					for (MatchData match : matchDataList) {
 						scan(allele, match);
 					}

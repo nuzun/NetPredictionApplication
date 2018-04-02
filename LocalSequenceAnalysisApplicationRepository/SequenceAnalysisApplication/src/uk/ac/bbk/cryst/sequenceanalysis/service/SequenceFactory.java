@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
 import uk.ac.bbk.cryst.sequenceanalysis.model.EnsemblPepSequence;
+import uk.ac.bbk.cryst.sequenceanalysis.model.HLAProteinSequence;
 import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 import uk.ac.bbk.cryst.sequenceanalysis.model.UniProtSequence;
 
@@ -19,6 +20,7 @@ public class SequenceFactory {
 	String line;
 	String sequenceStr = "";
 	String fastaName = "";
+	String proteinName ="";
 	String identifier = "";
 	String sequenceType;
 	String chromosome;
@@ -34,7 +36,13 @@ public class SequenceFactory {
 			UniProtSequence uniSeq = new UniProtSequence(id, seq);
 			uniSeq.setName(fastaName);
 			return uniSeq;
-		} else {
+		}
+		else if(type == FastaFileType.HLA){
+			HLAProteinSequence hlaSeq = new HLAProteinSequence(id, seq);
+			hlaSeq.setAlleleName(proteinName);
+			return hlaSeq;
+		}
+		else {
 			EnsemblPepSequence eSeq = new EnsemblPepSequence(id, seq);
 			eSeq.setSequenceType(sequenceType);
 			eSeq.setChromosome(chromosome);
@@ -47,6 +55,17 @@ public class SequenceFactory {
 		}
 	}
 
+	public Sequence getSequence(File inputFile, FastaFileType type){
+		List<Sequence> sequenceList = new ArrayList<>();
+		try {
+			sequenceList = getSequenceList(inputFile, type);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 return sequenceList.get(0);
+	}
+	
 	public List<Sequence> getSequenceList(File inputFile, FastaFileType type) throws IOException {
 
 		List<Sequence> sequenceList = new ArrayList<Sequence>();
@@ -71,7 +90,15 @@ public class SequenceFactory {
 							identifier = headerStrings[1];
 							fastaName = headerStrings[headerStrings.length - 1];
 						}
-					} else {
+					}
+					else if(type == FastaFileType.HLA){
+						String[] headerStrings = line.trim().split(" ");
+						if (headerStrings != null && headerStrings.length > 0) {
+							identifier = headerStrings[0].replace(">HLA:", "");// >HLA:HLA00001 A*01:01:01:01 365 bp
+							proteinName = headerStrings[1];
+						}
+					}
+					else {
 						String[] headerStrings = line.trim().split(" ");
 						if (headerStrings != null && headerStrings.length > 0) {
 							identifier = headerStrings[0].replace(">", "");// ENSP00000446015.1
