@@ -69,7 +69,7 @@ public abstract class Sequence {
 		}
 		
 		
-		return this.getSequence().substring(startIndex, endIndex);
+		return this.getSequence().substring(startIndex, endIndex);//start inclusive, end exclusive
 	}
 	
 	public int length(){
