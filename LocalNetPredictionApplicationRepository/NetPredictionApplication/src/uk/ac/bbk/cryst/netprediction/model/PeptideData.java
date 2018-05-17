@@ -80,10 +80,12 @@ public abstract class PeptideData implements Comparable<PeptideData> {
 		return (StringUtils.equals(this.getBindingLevel(), "WB") || this.getBindingLevel() == "") ? true : false;
 	}
 
+	@Override
 	public String toString() {
-		return "";
+		return "PeptideData [startPosition=" + startPosition + ", peptide=" + peptide + ", mhcScore=" + mhcScore
+				+ ", IC50Score=" + IC50Score + "]";
 	};
-
+	
 	public String toStringNoHeader(String string) {
 		return "";
 	};

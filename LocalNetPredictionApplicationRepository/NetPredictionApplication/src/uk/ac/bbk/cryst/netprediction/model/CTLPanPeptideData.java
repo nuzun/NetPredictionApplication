@@ -23,6 +23,10 @@ public class CTLPanPeptideData extends PeptideData {
 		return rankPercentage;
 	}
 	
+	public CTLPanPeptideData(){
+		
+	}
+	
 	public CTLPanPeptideData(int rank, int startPosition,String peptide,Float mhcScore, Float tapScore, Float cleavageScore,
 			Float combinedScore, Float rankPercentage, boolean epitope){
 		this.rank = rank;

@@ -24,6 +24,11 @@ public class SequenceComparator {
 	public SequenceComparator() {
 
 	}
+	
+	public SequenceComparator(FastaFileType input, FastaFileType compare) {
+		this.setInputFileType(input);
+		this.setCompareFileType(compare);
+	}
 
 	public FastaFileType getInputFileType() {
 		return inputFileType;

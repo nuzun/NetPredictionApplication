@@ -36,7 +36,7 @@ public class PredictionBasedSequenceScanner {
 	String compareFileName;
 	SequenceFactory sequenceFactory;
 
-	String tmpSequencePath;
+	String subSequencePath;
 	String alleleFileFullPath;
 	String sequenceFileFullPath;
 	String compareFileFullPath;
@@ -145,12 +145,12 @@ public class PredictionBasedSequenceScanner {
 		this.sequenceFactory = sequenceFactory;
 	}
 
-	public String getTmpSequencePath() {
-		return tmpSequencePath;
+	public String getSubSequencePath() {
+		return subSequencePath;
 	}
 
-	public void setTmpSequencePath(String tmpSequencePath) {
-		this.tmpSequencePath = tmpSequencePath;
+	public void setSubSequencePath(String subSequencePath) {
+		this.subSequencePath = subSequencePath;
 	}
 
 	public String getAlleleFileFullPath() {
@@ -196,7 +196,7 @@ public class PredictionBasedSequenceScanner {
 			alleleFileFullPath = properties.getValue("alleleFileFullPath");
 			sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
 			compareFileFullPath = properties.getValue("compareFileFullPath");
-			tmpSequencePath = properties.getValue("tmpSequencePath");
+			subSequencePath = properties.getValue("subSequencePath");
 
 			switch (this.type) {
 			case MHCIIPAN31:
@@ -273,7 +273,7 @@ public class PredictionBasedSequenceScanner {
 			String seq1FileFullContent = ">sp|" + match.getProteinId1() + "_" + match.getPosition1() + "\n"
 					+ match.getPeptide1();
 			String seq1FileName = match.getProteinId1() + "_" + match.getPosition1() + ".fasta";
-			File seq1File = new File(this.getTmpSequencePath() + seq1FileName);
+			File seq1File = new File(this.getSubSequencePath() + seq1FileName);
 			if (!seq1File.exists()) {
 				FileHelper.writeToFile(seq1File, seq1FileFullContent);
 			}
@@ -300,7 +300,7 @@ public class PredictionBasedSequenceScanner {
 				String seq2FileFullContent = ">sp|" + match.getProteinId2() + "_" + match.getPosition2() + "\n"
 						+ match.getPeptide2();
 				String seq2FileName = match.getProteinId2() + "_" + match.getPosition2() + ".fasta";
-				File seq2File = new File(this.getTmpSequencePath() + seq2FileName);
+				File seq2File = new File(this.getSubSequencePath() + seq2FileName);
 
 				if (!seq2File.exists()) {
 					FileHelper.writeToFile(seq2File, seq2FileFullContent);
