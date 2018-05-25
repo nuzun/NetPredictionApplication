@@ -7,8 +7,6 @@ import uk.ac.bbk.cryst.netprediction.service.AlloimmunityAnalyzer;
 public class AlloimmunityProgram {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
 		// Call analyzer
 		AlloimmunityAnalyzer alloimmunityAnalyzer;
 		try {
@@ -17,10 +15,8 @@ public class AlloimmunityProgram {
 			alloimmunityAnalyzer.runEliminate();
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

@@ -108,7 +108,7 @@ public class AlloimmunityAnalyzer {
 	}
 
 	public void generateOriginalEndogeneousSequenceScoreFiles() throws IOException {
-		LOGGER.info("Enter generateOriginalEndogeneousSequenceScoreFiles");
+		LOGGER.entering("AlloimmunityAnalyzer", "generateOriginalEndogeneousSequenceScoreFiles");
 		// Read the alleles straight from region/group of alleles file
 
 		// Read the original HLA file HLA-A*02:01
@@ -172,10 +172,11 @@ public class AlloimmunityAnalyzer {
 				}
 			}
 		} // variants
-		LOGGER.info("Exit generateOriginalEndogeneousSequenceScoreFiles");
+		LOGGER.exiting("AlloimmunityAnalyzer", "generateOriginalEndogeneousSequenceScoreFiles");
 	}
 
 	public void runEliminate() throws Exception {
+		LOGGER.entering("AlloimmunityAnalyzer", "runEliminate");
 		NetPanDataBuilder builder = new NetPanDataBuilder(this.getPredictionType());
 
 		// Go through each residue difference
@@ -240,13 +241,12 @@ public class AlloimmunityAnalyzer {
 				} // peptide
 
 				/*********** helpful output ***********************/
-				LOGGER.info(variant + "\n" + allele);
-
+				LOGGER.log(Level.INFO, "VARIANT:" + variant + " " + "ALLELE:" + allele);
 				StringBuilder sb = new StringBuilder();
 				for (PeptideData p : remainingPeptides) {
 					sb.append(p.toString() + "\n");
 				}
-				LOGGER.info(sb.toString());
+				LOGGER.info("REMAINING PEPTIDES:" + sb.toString());
 				/************************************************/
 
 				// Start proteome check
@@ -258,9 +258,13 @@ public class AlloimmunityAnalyzer {
 
 		// write the final novel data
 		writeToFinalOutputFile();
+		LOGGER.exiting("AlloimmunityAnalyzer", "runEliminate");
+
 	}
 
 	private void runProteomeCheck(String allele, String variant, List<PeptideData> remainingPeptides) throws Exception {
+		LOGGER.entering("AlloimmunityAnalyzer", "runProteomeCheck");
+
 		boolean isMatch = false;// positions do not have to match so false
 		// String[] parts = variant.split("-");
 		// String from = parts[0];
@@ -291,7 +295,7 @@ public class AlloimmunityAnalyzer {
 		for (PeptideData remaining : remainingPeptides) {
 			// Create a temporary fasta file from peptides in order to run a
 			// comparison
-			String tmpSeqFileFullContent = ">sp|" + remaining.getPeptide() + "|temp" + "\n" + remaining.getPeptide();
+			String tmpSeqFileFullContent = ">HLA:" + remaining.getPeptide() + " temp" + "\n" + remaining.getPeptide();
 			String tmpFileName = remaining.getPeptide() + ".fasta"; // testProtein_P00451.fasta_20AC
 			File tmpSeqFile = new File(this.getTmpSequencePath() + tmpFileName);
 
@@ -333,7 +337,7 @@ public class AlloimmunityAnalyzer {
 				sb.append(matchSequence.getProteinId() + "\n");
 				for (PeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
 						this.getAnchorPositions(), isMatch)) {
-					sb.append(pep.toString() + "\n");
+					sb.append(pep.toString());
 				}
 				LOGGER.info(sb.toString());
 				/************************************************/
@@ -349,27 +353,9 @@ public class AlloimmunityAnalyzer {
 
 		} // remaining peptides
 
-		/***********
-		 * helpful output
-		 ***************************************************************/
-		StringBuilder sb = new StringBuilder();
-		sb.append("-------------------------PRINTING MATCH MAP-----------------------------\n");
+		printMatchMap(matchMap);
 
-		for (PeptideData key : matchMap.keySet()) {
-			sb.append("REMAINING=" + key.toString() + "\n");
-
-			PeptideData match = matchMap.get(key);
-			if (match != null) {
-				sb.append("MATCH=" + match.toString() + "\n");
-			} else {
-				sb.append("NO MATCH\n");
-			}
-
-		}
-		sb.append("-------------------------END MATCH MAP------------------------------------");
-		LOGGER.info(sb.toString());
-		/****************************************************************************************/
-
+		// Set the novel surface object
 		int fullProtection = 1;
 		for (PeptideData key : matchMap.keySet()) {
 			PeptideData match = matchMap.get(key);
@@ -414,10 +400,15 @@ public class AlloimmunityAnalyzer {
 
 		FileUtils.cleanDirectory(new File(this.getTmpSequencePath()));
 
-		/***********
-		 * helpful output
-		 ***************************************************************/
-		sb = new StringBuilder();
+		printNovelObejct(novel);
+
+		LOGGER.exiting("AlloimmunityAnalyzer", "runProteomeCheck");
+
+	}
+
+	private void printNovelObejct(NovelPeptideSurface novel) {
+
+		StringBuilder sb = new StringBuilder();
 		sb.append(novel.getVariant() + ",");
 		sb.append(novel.getAllele() + ",");
 		if (novel.getPeptide1() != null) {
@@ -441,12 +432,30 @@ public class AlloimmunityAnalyzer {
 
 		/* helpful output */
 		LOGGER.info("NOVEL:" + sb.toString()
-				+ "******************************************************************************");
+				+ "#################################################################################");
+	}
+	
+	private void printMatchMap(Map<PeptideData, PeptideData> matchMap) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("==============================PRINTING MATCH MAP=================================\n");
 
+		for (PeptideData key : matchMap.keySet()) {
+			sb.append("REMAINING: " + key.toString() + "\n");
+
+			PeptideData match = matchMap.get(key);
+			if (match != null) {
+				sb.append("MATCH: " + match.toString() + "\n");
+			} else {
+				sb.append("NO MATCH\n");
+			}
+
+		}
+		sb.append("==============================END MATCH MAP======================================");
+		LOGGER.info(sb.toString());
 	}
 
 	private void writeToFinalOutputFile() throws IOException {
-		LOGGER.info("Enter writeToFinalOutputFile");
+		LOGGER.entering("AlloimmunityAnalyzer", "writeToFinalOutputFile");
 
 		String header = "Variant,Allele,Peptide1,IC50_1,Peptide2,IC50_2,Colour";
 		String newLine = "\n";
@@ -461,7 +470,7 @@ public class AlloimmunityAnalyzer {
 		Path path = Paths.get(this.getNovelSurfacesFileFullPath());
 		Files.write(path, novelEntry.toString().getBytes(), StandardOpenOption.APPEND);
 
-		LOGGER.info("Exit writeToFinalOutputFile");
+		LOGGER.exiting("AlloimmunityAnalyzer", "writeToFinalOutputFile");
 	}
 
 	private void readVariantFile(File variantFile) throws FileNotFoundException {
