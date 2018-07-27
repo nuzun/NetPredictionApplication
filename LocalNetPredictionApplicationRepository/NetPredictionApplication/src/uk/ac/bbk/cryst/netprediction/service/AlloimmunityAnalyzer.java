@@ -47,6 +47,7 @@ public class AlloimmunityAnalyzer {
 	PredictionType predictionType; // CTLPAN
 	List<Integer> anchorPositions;
 	List<String> variants; // sequence differences between A*02:01 and A*02:02
+	List<String> excluded;
 
 	PropertiesHelper properties;
 	SequenceFactory sequenceFactory;
@@ -60,6 +61,7 @@ public class AlloimmunityAnalyzer {
 	String hlaFileFullPath;
 	String compareFileFullPath;
 	String variantFileFullPath;
+	String excludeFileFullPath;
 
 	String variantOutputFullPath;
 	String endogenousOutputFullPath;
@@ -81,6 +83,7 @@ public class AlloimmunityAnalyzer {
 		this.setAnchorPositions(Arrays.asList(2, 9));
 
 		this.setVariants(new ArrayList<String>());
+		this.setExcluded(new ArrayList<String>());
 		this.setSequenceFactory(new SequenceFactory());
 
 		this.setVariantSequencePath(properties.getValue("variantSequencePath"));
@@ -91,10 +94,16 @@ public class AlloimmunityAnalyzer {
 		this.setHlaFileFullPath(properties.getValue("hlaFileFullPath"));
 		this.setCompareFileFullPath(properties.getValue("compareFileFullPath"));
 		this.setVariantFileFullPath(properties.getValue("variantFileFullPath")); // residue
-																					// differences
+																					// diff
+		this.setExcludeFileFullPath(properties.getValue("excludeFileFullPath"));
+
 		// Read variant file and assign it to variants list
 		File variantFile = new File(this.getVariantFileFullPath());
 		readVariantFile(variantFile);
+
+		// Read excluded file and assign it to the excluded list
+		File excludedFile = new File(this.getExcludeFileFullPath());
+		readExcludedFile(excludedFile);
 
 		this.setVariantOutputFullPath(properties.getValue("variantOutputFullPathCTLPan"));
 		this.setEndogenousOutputFullPath(properties.getValue("endogenousOutputFullPathCTLPan"));
@@ -335,15 +344,23 @@ public class AlloimmunityAnalyzer {
 				/*********** helpful output ***********************/
 				StringBuilder sb = new StringBuilder();
 				sb.append(matchSequence.getProteinId() + "\n");
-				for (PeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
-						this.getAnchorPositions(), isMatch)) {
-					sb.append(pep.toString());
+				
+				// exclude some from proteome check
+				if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
+					for (PeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
+							this.getAnchorPositions(), isMatch)) {
+						sb.append(pep.toString());
+					}
 				}
 				LOGGER.info(sb.toString());
+
 				/************************************************/
 
-				matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
-						this.getAnchorPositions(), isMatch));
+				// exclude some from proteome check
+				if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
+					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
+							this.getAnchorPositions(), isMatch));
+				}
 
 			} // proteome matches
 
@@ -434,7 +451,7 @@ public class AlloimmunityAnalyzer {
 		LOGGER.info("NOVEL:" + sb.toString()
 				+ "#################################################################################");
 	}
-	
+
 	private void printMatchMap(Map<PeptideData, PeptideData> matchMap) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("==============================PRINTING MATCH MAP=================================\n");
@@ -481,6 +498,22 @@ public class AlloimmunityAnalyzer {
 
 			while ((line = br.readLine()) != null && !line.trim().equals("")) {
 				variants.add(line.trim());
+			}
+
+			br.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	private void readExcludedFile(File excludedFile) throws FileNotFoundException {
+		String line = "";
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(excludedFile));
+
+			while ((line = br.readLine()) != null && !line.trim().equals("")) {
+				excluded.add(line.trim());
 			}
 
 			br.close();
@@ -537,6 +570,14 @@ public class AlloimmunityAnalyzer {
 
 	public void setVariants(List<String> variants) {
 		this.variants = variants;
+	}
+
+	public List<String> getExcluded() {
+		return excluded;
+	}
+
+	public void setExcluded(List<String> excluded) {
+		this.excluded = excluded;
 	}
 
 	public List<Integer> getAnchorPositions() {
@@ -650,4 +691,13 @@ public class AlloimmunityAnalyzer {
 	public void setNovelSurfacesFileFullPath(String novelSurfacesFileFullPath) {
 		this.novelSurfacesFileFullPath = novelSurfacesFileFullPath;
 	}
+
+	public String getExcludeFileFullPath() {
+		return excludeFileFullPath;
+	}
+
+	public void setExcludeFileFullPath(String excludeFileFullPath) {
+		this.excludeFileFullPath = excludeFileFullPath;
+	}
+
 }
