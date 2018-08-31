@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
-import uk.ac.bbk.cryst.netprediction.util.NovelSurfaceProcessorHelper;
+import uk.ac.bbk.cryst.netprediction.util.MHCIINovelSurfaceProcessorHelper;
 import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
 import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 import uk.ac.bbk.cryst.sequenceanalysis.service.PeptideGenerator;
@@ -79,7 +79,7 @@ public class ProteomeAnalyser {
 		Map<String, ArrayList<String>> matchMapByMutationAndAllele = new HashMap<>();
 		Map<String, ArrayList<String>> matchMapByMutationOnly = new HashMap<>();
 		Map<String, Integer> proteomeMatchMap = new HashMap<>();
-		NovelSurfaceProcessorHelper helper = new NovelSurfaceProcessorHelper();
+		MHCIINovelSurfaceProcessorHelper helper = new MHCIINovelSurfaceProcessorHelper();
 
 		Scanner scanner = null;
 		File logFile = new File(properties.getValue("logPath"));

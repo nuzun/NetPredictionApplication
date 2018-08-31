@@ -3,7 +3,7 @@ package uk.ac.bbk.cryst.netprediction.main;
 import java.io.IOException;
 
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
-import uk.ac.bbk.cryst.netprediction.service.NovelSurfaceResultsProcessor;
+import uk.ac.bbk.cryst.netprediction.service.MHCIINovelSurfaceResultsProcessor;
 
 public class PatientDataNovelSurfaceAnalyzerMain {
 
@@ -13,7 +13,7 @@ public class PatientDataNovelSurfaceAnalyzerMain {
 
 			boolean onlyDR = false;
 			boolean protScan = true;
-			NovelSurfaceResultsProcessor processor = new NovelSurfaceResultsProcessor(protScan, onlyDR,
+			MHCIINovelSurfaceResultsProcessor processor = new MHCIINovelSurfaceResultsProcessor(protScan, onlyDR,
 					PredictionType.MHCII); //createVariantFile prints square based stats in the const
 
 			processor.printRepresentativePatientStatistics();

@@ -26,7 +26,7 @@ import uk.ac.bbk.cryst.netprediction.dao.AlleleGroupDataDaoImpl;
 import uk.ac.bbk.cryst.netprediction.model.AlleleGroupData;
 import uk.ac.bbk.cryst.netprediction.model.PatientData;
 
-public class NovelSurfaceProcessorHelper {
+public class MHCIINovelSurfaceProcessorHelper {
 
 	PropertiesHelper properties = new PropertiesHelper();
 	List<String> variants = new ArrayList<>();
@@ -53,7 +53,7 @@ public class NovelSurfaceProcessorHelper {
 
 
 
-	public NovelSurfaceProcessorHelper() throws IOException{
+	public MHCIINovelSurfaceProcessorHelper() throws IOException{
 		//String mutationFileFullPath = properties.getValue("mutationFileNonSevereFullPath");
 		String mutationFileFullPath = properties.getValue("mutationFileAllSeverityFullPath");
 		

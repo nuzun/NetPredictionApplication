@@ -23,12 +23,12 @@ import uk.ac.bbk.cryst.netprediction.model.HeatMapBox;
 import uk.ac.bbk.cryst.netprediction.model.PatientData;
 import uk.ac.bbk.cryst.netprediction.util.CSVUtils;
 import uk.ac.bbk.cryst.netprediction.util.FileHelper;
-import uk.ac.bbk.cryst.netprediction.util.NovelSurfaceProcessorHelper;
+import uk.ac.bbk.cryst.netprediction.util.MHCIINovelSurfaceProcessorHelper;
 
-public class NovelSurfaceResultsProcessor {
+public class MHCIINovelSurfaceResultsProcessor {
 
 	PropertiesHelper properties;
-	NovelSurfaceProcessorHelper helper;
+	MHCIINovelSurfaceProcessorHelper helper;
 	String novelSurfacesResultFilePath;
 	boolean proteomeScanningOn = false;
 	int alleleCounter = 0;
@@ -38,7 +38,7 @@ public class NovelSurfaceResultsProcessor {
 	String fishersText = "";
 	List<HeatMapBox> boxList = new ArrayList<>();
 
-	public NovelSurfaceProcessorHelper getHelper() {
+	public MHCIINovelSurfaceProcessorHelper getHelper() {
 		return helper;
 	}
 
@@ -86,11 +86,11 @@ public class NovelSurfaceResultsProcessor {
 		this.novelSurfacesResultFilePath = novelSurfacesResultFilePath;
 	}
 
-	public NovelSurfaceResultsProcessor(boolean proteomeScanning, boolean onlyDR, PredictionType predictionType)
+	public MHCIINovelSurfaceResultsProcessor(boolean proteomeScanning, boolean onlyDR, PredictionType predictionType)
 			throws IOException {
 		super();
 		this.properties = new PropertiesHelper();
-		this.helper = new NovelSurfaceProcessorHelper();
+		this.helper = new MHCIINovelSurfaceProcessorHelper();
 
 		switch (predictionType) {
 		case MHCII:
