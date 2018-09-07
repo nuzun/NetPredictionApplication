@@ -43,9 +43,11 @@ public class MHCINovelSurfaceResultsProcessor {
 		this.setPredictionType(predictionType);
 		this.setProteomeScanningOn(proteomeScanning);
 
+	}
+	
+	public void process() throws IOException{
 		readNovelSurfaceResultFiles(); // populate full heatbox list
 		createHeatMapFiles();
-
 	}
 
 	private void readNovelSurfaceResultFiles() {

@@ -8,10 +8,16 @@ public class AlloimmunityNovelSurfaceAnalyzerMain {
 	public static void main(String[] args) throws Exception {
 		try {
 
-			boolean proteomeScanning = false;
-			MHCINovelSurfaceResultsProcessor processor = new MHCINovelSurfaceResultsProcessor(proteomeScanning,
+			//boolean proteomeScanning = false;
+			MHCINovelSurfaceResultsProcessor processort = new MHCINovelSurfaceResultsProcessor(true,
 					PredictionType.CTLPAN); // createVariantFile prints square
 											// based stats in the const
+			processort.process();
+			
+			MHCINovelSurfaceResultsProcessor processorf = new MHCINovelSurfaceResultsProcessor(false,
+					PredictionType.CTLPAN); // createVariantFile prints square
+											// based stats in the const
+			processorf.process();
 
 		}
 
