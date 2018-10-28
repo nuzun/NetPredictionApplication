@@ -16,6 +16,11 @@ public class PeptideDataHelper {
 		return list.get(0);
 	}
 	
+	/***
+	 * Used in NovelSurfaceAnalyzer only, keeping it for backward compatibility purposes
+	 * @param list
+	 * @return
+	 */
 	public static MHCIIPeptideData getTheStrongestBinderII(List<MHCIIPeptideData> list){
 		if(list == null || list.isEmpty()){
 			return null;
@@ -23,6 +28,7 @@ public class PeptideDataHelper {
 		Collections.sort(list);
 		return list.get(0);
 	}
+	
 	
 	public static boolean IsAllBindEfficiently(List<PeptideData> list){
 		boolean b = true;

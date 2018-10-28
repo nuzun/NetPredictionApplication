@@ -110,8 +110,11 @@ public class CTLPanPeptideData extends PeptideData {
 	
 	@Override
 	public int compareTo(PeptideData other) {
-		int last = this.combinedScore.compareTo(((CTLPanPeptideData)other).combinedScore);
-        return last * -1;
+		//int last = this.combinedScore.compareTo(((CTLPanPeptideData)other).combinedScore);
+        //return last * -1;
+		System.out.println("YAY1!");
+		return this.getIC50Score() < other.getIC50Score() ? -1 : (this.getIC50Score() > other.getIC50Score() ? 1 :0);
+
 	}
 	@Override
 	public String toStringNoHeader() {

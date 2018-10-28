@@ -42,7 +42,6 @@ public class AlloimmunityAnalyzerRoundTwo {
 
 	boolean roundTwo;
 	String donorHlaId;
-	List<String> otherRecipients;
 	String hlaA1;
 	String hlaA2;
 	String hlaB1;
@@ -124,7 +123,7 @@ public class AlloimmunityAnalyzerRoundTwo {
 		this.alleleGroupData = new AlleleGroupDataDaoImpl(this.getAlleleFileFullPath()).getGroupData();
 
 		this.setRoundTwo(true);
-		this.setHlaProteomeFileFullPath(properties.getValue("hlaProteomeFileFullPaths"));
+		this.setHlaProteomeFileFullPath(properties.getValue("hlaProteomeFileFullPath"));
 		initializeHLAConversionMap();
 
 		CustomLogger.setup();
@@ -972,14 +971,6 @@ public class AlloimmunityAnalyzerRoundTwo {
 
 	public void setHlaB2(String hlaB2) {
 		this.hlaB2 = hlaB2;
-	}
-
-	public List<String> getOtherRecipients() {
-		return otherRecipients;
-	}
-
-	public void setOtherRecipients(List<String> otherRecipients) {
-		this.otherRecipients = otherRecipients;
 	}
 
 }

@@ -87,7 +87,7 @@ public abstract class NetPanData implements Comparable<NetPanData> {
 		}
 		return peptideDataList;
 	}
-
+	
 	public List<MHCIIPeptideData> getSpecificPeptideDataByCore(String corePeptideStr) {
 		List<MHCIIPeptideData> peptideDataList = new ArrayList<MHCIIPeptideData>();
 
@@ -101,7 +101,45 @@ public abstract class NetPanData implements Comparable<NetPanData> {
 		}
 		return peptideDataList;
 	}
+	
+	/**
+	 * This method combines getSpecificPeptideData and getSpecificPeptideDataByCore
+	 * @param peptideStr
+	 * @param classII
+	 * @return
+	 */
+	
+	public List<PeptideData> getSpecificPeptideDataGeneric(String peptideStr, boolean classII) {
+		List<PeptideData> peptideDataList = new ArrayList<PeptideData>();
 
+		for (PeptideData peptideData : this.peptideList) {
+			if (peptideData instanceof MHCIIPeptideData) {
+				
+				MHCIIPeptideData newPep = (MHCIIPeptideData) peptideData;
+				if (StringUtils.equals(newPep.getCorePeptide(), StringUtils.trim(peptideStr))) {
+					peptideDataList.add(newPep);
+				}
+			}
+			else{
+				if (StringUtils.equals(peptideData.getPeptide(), StringUtils.trim(peptideStr))) {
+					peptideDataList.add(peptideData);
+				} else if (PeptideHelper.isSubSequence(peptideData.getPeptide(), StringUtils.trim(peptideStr))) {
+					if (!isDuplicate(peptideDataList, peptideData)) {
+						peptideDataList.add(peptideData);
+					}
+				}
+			}
+		}
+		return peptideDataList;
+	}
+
+/***
+ * This is sued in NovelSurfaceAnalyzer only, keeping it for backward compatibility purposes
+ * @param corePeptideStr
+ * @param positions
+ * @param isMatch
+ * @return
+ */
 	public List<MHCIIPeptideData> getSpecificPeptideDataByMaskedCore(String corePeptideStr, List<Integer> positions,
 			boolean isMatch) {
 		List<MHCIIPeptideData> peptideDataList = new ArrayList<MHCIIPeptideData>();
@@ -118,6 +156,13 @@ public abstract class NetPanData implements Comparable<NetPanData> {
 		return peptideDataList;
 	}
 	
+	/**
+	 * This method covers getSpecificPeptideDataByMaskedCore too???????????
+	 * @param corePeptideStr
+	 * @param positions
+	 * @param isMatch
+	 * @return
+	 */
 	public List<PeptideData> getSpecificPeptideDataByMaskedMatch(String corePeptideStr, List<Integer> positions,
 			boolean isMatch) {
 		List<PeptideData> peptideDataList = new ArrayList<PeptideData>();
@@ -252,6 +297,8 @@ public abstract class NetPanData implements Comparable<NetPanData> {
 
 	@Override
 	public int compareTo(NetPanData other) {
+		System.out.println("YAY5!");
+
 		int last = this.allele.compareTo(other.allele);
 		return last == 0 ? this.fastaFileName.compareTo(other.fastaFileName) : last;
 	}

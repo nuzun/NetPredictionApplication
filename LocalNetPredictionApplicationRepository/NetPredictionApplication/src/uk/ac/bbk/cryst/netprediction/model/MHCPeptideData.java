@@ -82,6 +82,8 @@ public class MHCPeptideData extends PeptideData {
 
 	@Override
 	public int compareTo(PeptideData other) {
+		System.out.println("YAY4!");
+
 		int last = this.mhcScore.compareTo(other.mhcScore);
 		return last * -1;
 	}
