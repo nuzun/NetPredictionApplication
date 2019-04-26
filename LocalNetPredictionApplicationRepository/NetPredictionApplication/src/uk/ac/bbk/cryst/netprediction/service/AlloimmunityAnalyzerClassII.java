@@ -24,7 +24,7 @@ import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.dao.AlleleGroupDataDaoImpl;
 import uk.ac.bbk.cryst.netprediction.model.AlleleGroupData;
-import uk.ac.bbk.cryst.netprediction.model.CTLPanPeptideData;
+import uk.ac.bbk.cryst.netprediction.model.MHCIIPeptideData;
 import uk.ac.bbk.cryst.netprediction.model.NetPanData;
 import uk.ac.bbk.cryst.netprediction.model.NovelPeptideSurface;
 import uk.ac.bbk.cryst.netprediction.model.PeptideData;
@@ -37,14 +37,14 @@ import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceComparator;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;
 
-public class AlloimmunityAnalyzer {
+public class AlloimmunityAnalyzerClassII {
 
 	StringBuilder novelEntry;
 	int nMer;
 	int IC50_threshold;
 	String scoreCode; // MHC(1) or comb (0)
 	String hlaFileName;
-	PredictionType predictionType; // CTLPAN
+	PredictionType predictionType; // MHCIIPAN31
 	List<Integer> anchorPositions;
 	List<String> variants; // sequence differences between A*02:01 and A*02:02
 	List<String> excluded;
@@ -71,16 +71,16 @@ public class AlloimmunityAnalyzer {
 
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-	public AlloimmunityAnalyzer() throws IOException {
+	public AlloimmunityAnalyzerClassII() throws IOException {
 		novelEntry = new StringBuilder();
 
 		this.setProperties(new PropertiesHelper());
-		this.setnMer(9);
+		this.setnMer(15);
 		this.setScoreCode("0");
-		this.setIC50_threshold(500);
+		this.setIC50_threshold(1000);
 		this.setHlaFileName(properties.getValue("hlaFileName"));
-		this.setPredictionType(PredictionType.CTLPAN);
-		this.setAnchorPositions(Arrays.asList(2, 9));
+		this.setPredictionType(PredictionType.MHCIIPAN31);
+		this.setAnchorPositions(Arrays.asList(1, 4, 6, 9));
 
 		this.setVariants(new ArrayList<String>());
 		this.setExcluded(new ArrayList<String>());
@@ -105,19 +105,18 @@ public class AlloimmunityAnalyzer {
 		File excludedFile = new File(this.getExcludeFileFullPath());
 		readExcludedFile(excludedFile);
 
-		this.setVariantOutputFullPath(properties.getValue("variantOutputFullPathCTLPan"));
-		this.setEndogenousOutputFullPath(properties.getValue("endogenousOutputFullPathCTLPan"));
-		this.setProteomeOutputFullPath(properties.getValue("proteomeOutputFullPathCTLPan"));
+		this.setVariantOutputFullPath(properties.getValue("variantOutputFullPathMHCIIPan"));
+		this.setEndogenousOutputFullPath(properties.getValue("endogenousOutputFullPathMHCIIPan"));
+		this.setProteomeOutputFullPath(properties.getValue("proteomeOutputFullPathMHCIIPan"));
 		this.setNovelSurfacesFileFullPath(properties.getValue("novelSurfacesFileFullPath"));
 		this.alleleGroupData = new AlleleGroupDataDaoImpl(this.getAlleleFileFullPath()).getGroupData();
 
 		CustomLogger.setup();
 		LOGGER.setLevel(Level.INFO);
-
 	}
 
 	public void generateOriginalEndogeneousSequenceScoreFiles() throws IOException {
-		LOGGER.entering("AlloimmunityAnalyzer", "generateOriginalEndogeneousSequenceScoreFiles");
+		LOGGER.entering("AlloimmunityAnalyzerClassII", "generateOriginalEndogeneousSequenceScoreFiles");
 		// Read the alleles straight from region/group of alleles file
 
 		// Read the original HLA file HLA-A*02:01
@@ -181,11 +180,11 @@ public class AlloimmunityAnalyzer {
 				}
 			}
 		} // variants
-		LOGGER.exiting("AlloimmunityAnalyzer", "generateOriginalEndogeneousSequenceScoreFiles");
+		LOGGER.exiting("AlloimmunityAnalyzerClassII", "generateOriginalEndogeneousSequenceScoreFiles");
 	}
 
 	public void runEliminate() throws Exception {
-		LOGGER.entering("AlloimmunityAnalyzer", "runEliminate");
+		LOGGER.entering("AlloimmunityAnalyzerClassII", "runEliminate");
 		NetPanDataBuilder builder = new NetPanDataBuilder(this.getPredictionType());
 
 		// Go through each residue difference
@@ -197,39 +196,45 @@ public class AlloimmunityAnalyzer {
 
 			// And each allele
 			for (String allele : alleleGroupData.getAlleleMap().keySet()) {
-				List<PeptideData> remainingPeptides = new ArrayList<>();
+				List<MHCIIPeptideData> remainingPeptides = new ArrayList<>();
 
 				String fileName = FilenameUtils.removeExtension(this.getHlaFileName()) + "_" + allele + ".txt";
 				NetPanData variantNetPanData = builder
 						.buildSingleFileData(new File(this.getVariantOutputFullPath() + fileName));
 
 				for (PeptideData peptide : variantNetPanData.getPanningPeptideList(variantPosition)) {
-					CTLPanPeptideData therapeuticPeptide = (CTLPanPeptideData) peptide;
+					MHCIIPeptideData therapeuticPeptide = (MHCIIPeptideData) peptide;
 
-					// Continue if the therapeuticPeptide (donor/therapeutic)
-					// binds strong
-					if (therapeuticPeptide.getIC50Score() < this.getIC50_threshold()) {
+					// continue if the core contains the variant and binds
+					// strong, note that both startPos and coreStartPos starts
+					// from 0, variantPos starts from 1
+					int start = therapeuticPeptide.getStartPosition() + therapeuticPeptide.getCoreStartPosition();
+					int variantIndexAtCore = variantPosition - start - 1; // 0-8
+
+					if ((9 > variantIndexAtCore) && (variantIndexAtCore >= 0)
+							&& (therapeuticPeptide.getIC50Score() < this.getIC50_threshold())) {
+
 						// Check endogeneous/recipient criteria
 						String endogeneousFileName = fileName + "_" + variantPosition + from + to;
 						NetPanData endogeneousNetPanData = builder.buildSingleFileData(
 								new File(this.getEndogenousOutputFullPath() + endogeneousFileName));
 
-						StringBuilder endogeneousPeptide = new StringBuilder(therapeuticPeptide.getPeptide());
-						int charIndex = variantPosition - therapeuticPeptide.getStartPosition() - 1;
-						endogeneousPeptide.setCharAt(charIndex, to.charAt(0));
-						List<PeptideData> endogeneousMatchList = endogeneousNetPanData
-								.getSpecificPeptideData(endogeneousPeptide.toString());
+						// continue if the core is the same with any endo core
+						StringBuilder endogeneousCore = new StringBuilder(therapeuticPeptide.getCorePeptide());
+						endogeneousCore.setCharAt(variantIndexAtCore, to.charAt(0));
+						List<MHCIIPeptideData> endogeneousMatchList = endogeneousNetPanData
+								.getSpecificPeptideDataByCore(endogeneousCore.toString());
 
 						if (endogeneousMatchList.size() > 0) {
 							int allWeak = 1;
-							for (PeptideData endogeneousMatch : endogeneousMatchList) {
+							for (MHCIIPeptideData endogeneousMatch : endogeneousMatchList) {
 								if (endogeneousMatch.getIC50Score() < this.getIC50_threshold()) {
 									// check MHC/TCR
 									allWeak = 0;
-									if (this.getAnchorPositions().contains(charIndex + 1)) {
-										// eliminate it is not novel, variation
-										// is on 2,9 MHC facing you have
-										// protection from TCR
+									if (this.getAnchorPositions().contains(variantIndexAtCore + 1)) {
+										// eliminate it is not novel, mutation
+										// is on 1,4,6,9 MHC facing you have
+										// protection
 									} else {
 										// add newPeptide to the list for
 										// proteome check
@@ -267,13 +272,14 @@ public class AlloimmunityAnalyzer {
 
 		// write the final novel data
 		writeToFinalOutputFile();
-		LOGGER.exiting("AlloimmunityAnalyzer", "runEliminate");
+		LOGGER.exiting("AlloimmunityAnalyzerClassII", "runEliminate");
 
 	}
 
-	private void runProteomeCheck(String allele, String variant, List<PeptideData> remainingPeptides) throws Exception {
-		LOGGER.entering("AlloimmunityAnalyzer", "runProteomeCheck");
+	private void runProteomeCheck(String allele, String variant, List<MHCIIPeptideData> remainingPeptides) throws Exception {
+		LOGGER.entering("AlloimmunityAnalyzerClassII", "runProteomeCheck");
 
+		int coreNMer = 9;
 		boolean isMatch = false;// positions do not have to match so false
 		// String[] parts = variant.split("-");
 		// String from = parts[0];
@@ -297,19 +303,19 @@ public class AlloimmunityAnalyzer {
 		novel.setAllele(allele);
 		novel.setVariant(variant);
 
-		PeptideData peptide1 = new CTLPanPeptideData();
-		PeptideData peptide2 = new CTLPanPeptideData();
-		peptide1 = PeptideDataHelper.getTheStrongestBinder(remainingPeptides);
+		PeptideData peptide1 = new MHCIIPeptideData();
+		PeptideData peptide2 = new MHCIIPeptideData();
+		peptide1 = PeptideDataHelper.getTheStrongestBinderII(remainingPeptides);
 
-		for (PeptideData remaining : remainingPeptides) {
+		for (MHCIIPeptideData remaining : remainingPeptides) {
 			// Create a temporary fasta file from peptides in order to run a
 			// comparison
-			String tmpSeqFileFullContent = ">HLA:" + remaining.getPeptide() + " temp" + "\n" + remaining.getPeptide();
-			String tmpFileName = remaining.getPeptide() + ".fasta"; // testProtein_P00451.fasta_20AC
+			String tmpSeqFileFullContent = ">HLA:" + remaining.getCorePeptide() + " temp" + "\n" + remaining.getCorePeptide();
+			String tmpFileName = remaining.getCorePeptide() + ".fasta"; // testProtein_P00451.fasta_20AC
 			File tmpSeqFile = new File(this.getTmpSequencePath() + tmpFileName);
 
 			if (tmpSeqFile.exists()) {
-				matchMap.put(remaining, tempMap.get(remaining.getPeptide()));
+				matchMap.put(remaining, tempMap.get(remaining.getCorePeptide()));
 				continue;
 			}
 
@@ -317,56 +323,66 @@ public class AlloimmunityAnalyzer {
 
 			// Returns matching proteome subsequences
 			matchList = sequenceComparator.runMatchFinder(tmpSeqFile, rightList, this.getAnchorPositions(), isMatch,
-					this.getnMer());
-			List<PeptideData> matchingPeptides = new ArrayList<>();
+					coreNMer, this.getnMer());
+			List<MHCIIPeptideData> matchingPeptides = new ArrayList<>();
 
 			// Run predictions on the matching proteome sequences
 			for (Sequence matchSequence : matchList) {
 
-				String proteomeSeqFileFullContent = ">sp|" + matchSequence.getProteinId() + "\n"
-						+ matchSequence.getSequence();
-				String proteomeSeqFileName = matchSequence.getProteinId() + ".fasta";
-				File proteomeSeqFile = new File(this.getProteomeSequencePath() + proteomeSeqFileName);
-
-				if (!proteomeSeqFile.exists()) {
-					FileHelper.writeToFile(proteomeSeqFile, proteomeSeqFileFullContent);
-				}
-
-				String proteomeOutputFileFullPath = this.getProteomeOutputFullPath()
-						+ FilenameUtils.removeExtension(proteomeSeqFileName) + "_" + allele + ".txt";
-				File proteomeScoreFileToCreate = new File(proteomeOutputFileFullPath);
-				if (!proteomeScoreFileToCreate.exists()) {
-					NetPanCmd.run(this.getPredictionType(), this.getScoreCode(), String.valueOf(this.getnMer()), allele,
-							proteomeSeqFile.getPath(), proteomeOutputFileFullPath);
-				}
-				NetPanData protNetPanData = builder.buildSingleFileData(new File(proteomeOutputFileFullPath));
-
-				/*********** helpful output ***********************/
-				StringBuilder sb = new StringBuilder();
-				sb.append(matchSequence.getProteinId() + "\n");
-				
-				// exclude some from proteome check
 				if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
-					for (PeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
-							this.getAnchorPositions(), isMatch)) {
-						sb.append(pep.toString());
+
+					String proteomeSeqFileFullContent = ">sp|" + matchSequence.getProteinId() + "\n"
+							+ matchSequence.getSequence();
+					String proteomeSeqFileName = matchSequence.getProteinId() + ".fasta";
+					File proteomeSeqFile = new File(this.getProteomeSequencePath() + proteomeSeqFileName);
+
+					if (!proteomeSeqFile.exists()) {
+						FileHelper.writeToFile(proteomeSeqFile, proteomeSeqFileFullContent);
 					}
-				}
-				LOGGER.info(sb.toString());
 
-				/************************************************/
+					String proteomeOutputFileFullPath = this.getProteomeOutputFullPath()
+							+ FilenameUtils.removeExtension(proteomeSeqFileName) + "_" + allele + ".txt";
+					File proteomeScoreFileToCreate = new File(proteomeOutputFileFullPath);
+					if (!proteomeScoreFileToCreate.exists()) {
+						NetPanCmd.run(this.getPredictionType(), this.getScoreCode(), String.valueOf(this.getnMer()),
+								allele, proteomeSeqFile.getPath(), proteomeOutputFileFullPath);
+					}
+					NetPanData protNetPanData = builder.buildSingleFileData(new File(proteomeOutputFileFullPath));
 
-				// exclude some from proteome check
-				if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
-					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
-							this.getAnchorPositions(), isMatch));
+					/*********** helpful output ***********************/
+					StringBuilder sb = new StringBuilder();
+					sb.append(matchSequence.getProteinId() + "\n");
+
+					// exclude some from proteome check
+					if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
+						for (PeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedCore(
+								((MHCIIPeptideData) remaining).getCorePeptide(), this.getAnchorPositions(), isMatch)) {
+							sb.append(pep.toString() + "\n");
+						}
+					}
+					LOGGER.info(sb.toString());
+
+					/************************************************/
+
+					// exclude some from proteome check
+					if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
+						matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedCore(
+								((MHCIIPeptideData) remaining).getCorePeptide(), this.getAnchorPositions(), isMatch));
+					}
+					
+				} else {
+					StringBuilder sb = new StringBuilder();
+					sb.append(matchSequence.getProteinId() + "-exc"+ "\n");
+
+					LOGGER.info(sb.toString());
+
 				}
 
 			} // proteome matches
 
-			PeptideData bestMatch = (PeptideData) PeptideDataHelper.getTheStrongestBinder(matchingPeptides);
+			PeptideData bestMatch = (PeptideData) PeptideDataHelper.getTheStrongestBinderII(matchingPeptides);
 			matchMap.put(remaining, bestMatch);
-			tempMap.put(remaining.getPeptide(), bestMatch);
+			tempMap.put(remaining.getCorePeptide(), bestMatch);
 
 		} // remaining peptides
 
@@ -419,7 +435,7 @@ public class AlloimmunityAnalyzer {
 
 		printNovelObejct(novel);
 
-		LOGGER.exiting("AlloimmunityAnalyzer", "runProteomeCheck");
+		LOGGER.exiting("AlloimmunityAnalyzerClassII", "runProteomeCheck");
 
 	}
 
@@ -429,16 +445,20 @@ public class AlloimmunityAnalyzer {
 		sb.append(novel.getVariant() + ",");
 		sb.append(novel.getAllele() + ",");
 		if (novel.getPeptide1() != null) {
-			sb.append(((PeptideData) novel.getPeptide1()).getPeptide() + ",");
-			sb.append(((PeptideData) novel.getPeptide1()).getIC50Score() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getPeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getCorePeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide1()).getIC50Score() + ",");
 		} else {
+			sb.append("" + ",");
 			sb.append("" + ",");
 			sb.append("" + ",");
 		}
 		if (novel.getPeptide2() != null) {
-			sb.append(((PeptideData) novel.getPeptide2()).getPeptide() + ",");
-			sb.append(((PeptideData) novel.getPeptide2()).getIC50Score() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getPeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getCorePeptide() + ",");
+			sb.append(((MHCIIPeptideData) novel.getPeptide2()).getIC50Score() + ",");
 		} else {
+			sb.append("" + ",");
 			sb.append("" + ",");
 			sb.append("" + ",");
 		}
@@ -472,9 +492,9 @@ public class AlloimmunityAnalyzer {
 	}
 
 	private void writeToFinalOutputFile() throws IOException {
-		LOGGER.entering("AlloimmunityAnalyzer", "writeToFinalOutputFile");
+		LOGGER.entering("AlloimmunityAnalyzerClassII", "writeToFinalOutputFile");
 
-		String header = "Variant,Allele,Peptide1,IC50_1,Peptide2,IC50_2,Colour";
+		String header = "Variant,Allele,Peptide_1,CorePeptide_1,IC50_1,Peptide_2,CorePeptide_2,IC50_2,Colour";
 		String newLine = "\n";
 
 		File file = new File(this.getNovelSurfacesFileFullPath());
@@ -487,7 +507,7 @@ public class AlloimmunityAnalyzer {
 		Path path = Paths.get(this.getNovelSurfacesFileFullPath());
 		Files.write(path, novelEntry.toString().getBytes(), StandardOpenOption.APPEND);
 
-		LOGGER.exiting("AlloimmunityAnalyzer", "writeToFinalOutputFile");
+		LOGGER.exiting("AlloimmunityAnalyzerClassII", "writeToFinalOutputFile");
 	}
 
 	private void readVariantFile(File variantFile) throws FileNotFoundException {
@@ -522,8 +542,18 @@ public class AlloimmunityAnalyzer {
 		}
 	}
 
-	// ======================== Setters and getters start
-	// ===============================================
+	/****************************
+	 * GETTERS and SETTERS
+	 *****************************/
+
+	public StringBuilder getNovelEntry() {
+		return novelEntry;
+	}
+
+	public void setNovelEntry(StringBuilder novelEntry) {
+		this.novelEntry = novelEntry;
+	}
+
 	public int getnMer() {
 		return nMer;
 	}
@@ -532,20 +562,20 @@ public class AlloimmunityAnalyzer {
 		this.nMer = nMer;
 	}
 
-	public String getScoreCode() {
-		return scoreCode;
-	}
-
-	public void setScoreCode(String scoreCode) {
-		this.scoreCode = scoreCode;
-	}
-
 	public int getIC50_threshold() {
 		return IC50_threshold;
 	}
 
 	public void setIC50_threshold(int iC50_threshold) {
 		IC50_threshold = iC50_threshold;
+	}
+
+	public String getScoreCode() {
+		return scoreCode;
+	}
+
+	public void setScoreCode(String scoreCode) {
+		this.scoreCode = scoreCode;
 	}
 
 	public String getHlaFileName() {
@@ -564,6 +594,14 @@ public class AlloimmunityAnalyzer {
 		this.predictionType = predictionType;
 	}
 
+	public List<Integer> getAnchorPositions() {
+		return anchorPositions;
+	}
+
+	public void setAnchorPositions(List<Integer> anchorPositions) {
+		this.anchorPositions = anchorPositions;
+	}
+
 	public List<String> getVariants() {
 		return variants;
 	}
@@ -580,14 +618,6 @@ public class AlloimmunityAnalyzer {
 		this.excluded = excluded;
 	}
 
-	public List<Integer> getAnchorPositions() {
-		return anchorPositions;
-	}
-
-	public void setAnchorPositions(List<Integer> anchorPositions) {
-		this.anchorPositions = anchorPositions;
-	}
-
 	public PropertiesHelper getProperties() {
 		return properties;
 	}
@@ -602,6 +632,14 @@ public class AlloimmunityAnalyzer {
 
 	public void setSequenceFactory(SequenceFactory sequenceFactory) {
 		this.sequenceFactory = sequenceFactory;
+	}
+
+	public AlleleGroupData getAlleleGroupData() {
+		return alleleGroupData;
+	}
+
+	public void setAlleleGroupData(AlleleGroupData alleleGroupData) {
+		this.alleleGroupData = alleleGroupData;
 	}
 
 	public String getVariantSequencePath() {
@@ -660,6 +698,14 @@ public class AlloimmunityAnalyzer {
 		this.variantFileFullPath = variantFileFullPath;
 	}
 
+	public String getExcludeFileFullPath() {
+		return excludeFileFullPath;
+	}
+
+	public void setExcludeFileFullPath(String excludeFileFullPath) {
+		this.excludeFileFullPath = excludeFileFullPath;
+	}
+
 	public String getVariantOutputFullPath() {
 		return variantOutputFullPath;
 	}
@@ -692,12 +738,8 @@ public class AlloimmunityAnalyzer {
 		this.novelSurfacesFileFullPath = novelSurfacesFileFullPath;
 	}
 
-	public String getExcludeFileFullPath() {
-		return excludeFileFullPath;
-	}
-
-	public void setExcludeFileFullPath(String excludeFileFullPath) {
-		this.excludeFileFullPath = excludeFileFullPath;
+	public static Logger getLogger() {
+		return LOGGER;
 	}
 
 }

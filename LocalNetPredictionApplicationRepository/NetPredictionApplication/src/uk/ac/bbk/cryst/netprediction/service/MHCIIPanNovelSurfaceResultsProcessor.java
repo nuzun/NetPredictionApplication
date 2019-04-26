@@ -17,28 +17,28 @@ import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.model.HeatMapBox;
 import uk.ac.bbk.cryst.netprediction.util.FileHelper;
-import uk.ac.bbk.cryst.netprediction.util.MHCINovelSurfaceProcessorHelper;
+import uk.ac.bbk.cryst.netprediction.util.MHCIIPanNovelSurfaceProcessorHelper;
 
-public class MHCINovelSurfaceResultsProcessor {
+public class MHCIIPanNovelSurfaceResultsProcessor {
 
 	PropertiesHelper properties;
-	MHCINovelSurfaceProcessorHelper helper;
+	MHCIIPanNovelSurfaceProcessorHelper helper;
 	String novelSurfacesResultFilePath;
 	boolean proteomeScanningOn = false;
 	PredictionType predictionType;
 	List<HeatMapBox> boxList = new ArrayList<>();
 	Map<String, String> nomenclatureList;
 
-	public MHCINovelSurfaceResultsProcessor(boolean proteomeScanning, PredictionType predictionType)
+	public MHCIIPanNovelSurfaceResultsProcessor(boolean proteomeScanning, PredictionType predictionType)
 			throws IOException {
 		super();
 		this.properties = new PropertiesHelper();
-		this.helper = new MHCINovelSurfaceProcessorHelper();
+		this.helper = new MHCIIPanNovelSurfaceProcessorHelper();
 		setNomenclature();
 
 		switch (predictionType) {
-		case CTLPAN:
-			this.setNovelSurfacesResultFilePath(properties.getValue("novelSurfacesResultFilePathCTLPan"));
+		case MHCIIPAN31:
+			this.setNovelSurfacesResultFilePath(properties.getValue("novelSurfacesResultFilePathMHCIIPan"));
 			break;
 		default:
 			break;
@@ -78,18 +78,19 @@ public class MHCINovelSurfaceResultsProcessor {
 					String row = scanner.nextLine();
 					String[] elements = row.split(",");
 
-					if (elements.length != 7) {
+					if (elements.length != 9) {
 						System.out.println("Error: Missing data");
 						return;
 					}
-
 					String variant = elements[0];
 					String allele = elements[1];
 					String peptide_1 = elements[2];
-					String IC50_1 = elements[3];
-					String peptide_2 = elements[4];
-					String IC50_2 = elements[5];
-					String colour = elements[6];
+					String corePeptide_1 = elements[3];
+					String IC50_1 = elements[4];
+					String peptide_2 = elements[5];
+					String corePeptide_2 = elements[6];
+					String IC50_2 = elements[7];
+					String colour = elements[8];
 
 					// check variants we want to calculate things for first
 					// before creating
@@ -176,11 +177,11 @@ public class MHCINovelSurfaceResultsProcessor {
 		this.properties = properties;
 	}
 
-	public MHCINovelSurfaceProcessorHelper getHelper() {
+	public MHCIIPanNovelSurfaceProcessorHelper getHelper() {
 		return helper;
 	}
 
-	public void setHelper(MHCINovelSurfaceProcessorHelper helper) {
+	public void setHelper(MHCIIPanNovelSurfaceProcessorHelper helper) {
 		this.helper = helper;
 	}
 
@@ -218,32 +219,31 @@ public class MHCINovelSurfaceResultsProcessor {
 
 	private void setNomenclature() {
 		nomenclatureList = new HashMap<>();
-		nomenclatureList.put("HLA-A02:01", "HLA-A*02:01");
-		nomenclatureList.put("HLA-A02:02", "HLA-A*02:02");
-		nomenclatureList.put("HLA-A02:03", "HLA-A*02:03");
-		nomenclatureList.put("HLA-A02:06", "HLA-A*02:06");
-		nomenclatureList.put("HLA-A01:01", "HLA-A*01:01");
-		nomenclatureList.put("HLA-A03:01", "HLA-A*03:01");
-		nomenclatureList.put("HLA-A24:02", "HLA-A*24:02");
-		nomenclatureList.put("HLA-A11:01", "HLA-A*11:01");
-		nomenclatureList.put("HLA-A29:02", "HLA-A*29:02");
-		nomenclatureList.put("HLA-A32:01", "HLA-A*32:01");
-		nomenclatureList.put("HLA-A68:01", "HLA-A*68:01");
-		nomenclatureList.put("HLA-A31:01", "HLA-A*31:01");
-		nomenclatureList.put("HLA-A26:01", "HLA-A*26:01");
-		nomenclatureList.put("HLA-B07:02", "HLA-B*07:02");
-		nomenclatureList.put("HLA-B07:03", "HLA-B*07:03");
-		nomenclatureList.put("HLA-B07:04", "HLA-B*07:04");
-		nomenclatureList.put("HLA-B07:05", "HLA-B*07:05");
-		nomenclatureList.put("HLA-B07:07", "HLA-B*07:07");
-		nomenclatureList.put("HLA-B08:01", "HLA-B*08:01");
-		nomenclatureList.put("HLA-B44:02", "HLA-B*44:02");
-		nomenclatureList.put("HLA-B35:01", "HLA-B*35:01");
-		nomenclatureList.put("HLA-B51:01", "HLA-B*51:01");
-		nomenclatureList.put("HLA-B40:01", "HLA-B*40:01");
-		nomenclatureList.put("HLA-B44:03", "HLA-B*44:03");
-		nomenclatureList.put("HLA-B15:01", "HLA-B*15:01");
-		nomenclatureList.put("HLA-B18:01", "HLA-B*18:01");
-		nomenclatureList.put("HLA-B57:01", "HLA-B*57:01");
+		nomenclatureList.put("HLA-DPA10103-DPB10201", "HLA-DPA1*01:03-DPB1*02:01");
+		nomenclatureList.put("HLA-DPA10103-DPB10401", "HLA-DPA1*01:03-DPB1*04:01");
+		nomenclatureList.put("HLA-DPA10103-DPB10401", "HLA-DPA1*01:03-DPB1*04:01");
+		nomenclatureList.put("HLA-DPA10201-DPB10101", "HLA-DPA1*02:01-DPB1*01:01");
+		nomenclatureList.put("HLA-DPA10201-DPB10501", "HLA-DPA1*02:01-DPB1*05:01");
+		nomenclatureList.put("HLA-DPA10301-DPB10402", "HLA-DPA1*03:01-DPB1*04:02");
+		nomenclatureList.put("HLA-DQA10101-DQB10501", "HLA-DQA1*01:01-DQB1*05:01");
+		nomenclatureList.put("HLA-DQA10102-DQB10602", "HLA-DQA1*01:02-DQB1*06:02");
+		nomenclatureList.put("HLA-DQA10301-DQB10302", "HLA-DQA1*03:01-DQB1*03:02");
+		nomenclatureList.put("HLA-DQA10401-DQB10402", "HLA-DQA1*04:01-DQB1*04:02");
+		nomenclatureList.put("HLA-DQA10501-DQB10201", "HLA-DQA1*05:01-DQB1*02:01");
+		nomenclatureList.put("HLA-DQA10501-DQB10301", "HLA-DQA1*05:01-DQB1*03:01");
+		nomenclatureList.put("DRB1_0101", "HLA-DRB1*01:01");
+		nomenclatureList.put("DRB1_0301", "HLA-DRB1*03:01");
+		nomenclatureList.put("DRB1_0401", "HLA-DRB1*04:01");
+		nomenclatureList.put("DRB1_0404", "HLA-DRB1*04:04");
+		nomenclatureList.put("DRB1_0405", "HLA-DRB1*04:05");
+		nomenclatureList.put("DRB1_0701", "HLA-DRB1*07:01");
+		nomenclatureList.put("DRB1_0802", "HLA-DRB1*08:02");
+		nomenclatureList.put("DRB1_0901", "HLA-DRB1*09:01");
+		nomenclatureList.put("DRB1_1101", "HLA-DRB1*11:01");
+		nomenclatureList.put("DRB1_1302", "HLA-DRB1*13:02");
+		nomenclatureList.put("DRB1_1501", "HLA-DRB1*15:01");
+		nomenclatureList.put("DRB3_0101", "HLA-DRB3*01:01");
+		nomenclatureList.put("DRB4_0101", "HLA-DRB4*01:01");
+		nomenclatureList.put("DRB5_0101", "HLA-DRB5*01:01");
 	}
 }

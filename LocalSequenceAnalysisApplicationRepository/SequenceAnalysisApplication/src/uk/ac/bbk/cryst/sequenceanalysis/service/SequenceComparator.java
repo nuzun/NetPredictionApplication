@@ -58,7 +58,7 @@ public class SequenceComparator {
 	 * @throws IOException
 	 */
 	public List<Sequence> runMatchFinder(File inputFile, List<Sequence> seq2List, List<Integer> positions,
-			boolean isMatch, int kmer) throws IOException {
+			boolean isMatch, int kmer, int panningMer) throws IOException {
 		List<Sequence> matchList = new ArrayList<Sequence>();
 
 		SequenceFactory sequenceFactory = new SequenceFactory();
@@ -87,7 +87,7 @@ public class SequenceComparator {
 			// name the sequence with its original name_match position
 			for (MatchData match : matchMap) {
 				int matchPosition = match.getPosition2();
-				String panningSeq = seq2.getPanningSequence(matchPosition + 1, kmer);// need
+				String panningSeq = seq2.getPanningSequence(matchPosition + 1, panningMer);// need
 																					// to
 																					// pass
 																					// +1

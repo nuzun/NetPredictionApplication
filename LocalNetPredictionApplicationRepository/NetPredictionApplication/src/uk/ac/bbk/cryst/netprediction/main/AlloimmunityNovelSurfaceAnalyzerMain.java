@@ -1,7 +1,7 @@
 package uk.ac.bbk.cryst.netprediction.main;
 
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
-import uk.ac.bbk.cryst.netprediction.service.MHCINovelSurfaceResultsProcessor;
+import uk.ac.bbk.cryst.netprediction.service.MHCIIPanNovelSurfaceResultsProcessor;
 
 public class AlloimmunityNovelSurfaceAnalyzerMain {
 
@@ -9,13 +9,13 @@ public class AlloimmunityNovelSurfaceAnalyzerMain {
 		try {
 
 			//boolean proteomeScanning = false;
-			MHCINovelSurfaceResultsProcessor processort = new MHCINovelSurfaceResultsProcessor(true,
-					PredictionType.CTLPAN); // createVariantFile prints square
+			MHCIIPanNovelSurfaceResultsProcessor processort = new MHCIIPanNovelSurfaceResultsProcessor(true,
+					PredictionType.MHCIIPAN31); // createVariantFile prints square
 											// based stats in the const
 			processort.process();
 			
-			MHCINovelSurfaceResultsProcessor processorf = new MHCINovelSurfaceResultsProcessor(false,
-					PredictionType.CTLPAN); // createVariantFile prints square
+			MHCIIPanNovelSurfaceResultsProcessor processorf = new MHCIIPanNovelSurfaceResultsProcessor(false,
+					PredictionType.MHCIIPAN31); // createVariantFile prints square
 											// based stats in the const
 			processorf.process();
 

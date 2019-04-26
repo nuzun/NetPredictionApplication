@@ -17,7 +17,7 @@ public class PeptideDataHelper {
 	}
 	
 	/***
-	 * Used in NovelSurfaceAnalyzer only, keeping it for backward compatibility purposes
+	 * Used in Class II analyzers
 	 * @param list
 	 * @return
 	 */

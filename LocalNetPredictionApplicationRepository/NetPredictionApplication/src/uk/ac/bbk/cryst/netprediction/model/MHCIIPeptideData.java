@@ -131,7 +131,7 @@ public class MHCIIPeptideData extends PeptideData {
 	
 	@Override
 	public int compareTo(PeptideData other) {
-		System.out.println("YAY3!");
+		//System.out.println("YAY3!");
 
 		return this.getIC50Score() < other.getIC50Score() ? -1 : (this.getIC50Score() > other.getIC50Score() ? 1 :0);
 	}

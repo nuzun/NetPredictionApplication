@@ -463,7 +463,7 @@ public class NovelSurfaceAnalyzer {
 			// sequence
 			// aaaaaaaaaaaaaaMAAAAAAAAaaaaaa
 			matchList = sequenceComparator.runMatchFinder(tmpSeqFile, seq2List, this.getAnchorPositions(), isMatch,
-					coreNMer);
+					coreNMer,this.getnMer());
 
 			List<MHCIIPeptideData> matchingPeptides = new ArrayList<MHCIIPeptideData>();
 			// run predictions on the matching proteome sequences

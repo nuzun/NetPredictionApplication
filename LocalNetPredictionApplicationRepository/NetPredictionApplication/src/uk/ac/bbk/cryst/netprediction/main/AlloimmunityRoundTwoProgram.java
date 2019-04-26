@@ -13,11 +13,11 @@ public class AlloimmunityRoundTwoProgram {
 			// set the variant,variant heatmap and mhc1 alleles (LHN) files
 			// accordingly
 			analyzer = new AlloimmunityAnalyzerRoundTwo();
-			analyzer.setDonorHlaId("HLA-A02:01");
-			analyzer.setHlaA1("HLA-A02:02");// recipient
-			analyzer.setHlaA2("HLA-A68:01");// coloured allele square
-			//analyzer.setHlaB1("");
-			//analyzer.setHlaB2("HLA-B35:01");
+			analyzer.setDonorHlaId("HLA-B44:02");//donor
+			//analyzer.setHlaA1("HLA-A02:03");// recipient
+			//analyzer.setHlaA2("HLA-A29:02");// coloured allele square
+			analyzer.setHlaB1("HLA-B44:03");//recipient
+			analyzer.setHlaB2("HLA-B35:01");//coloured allele square
 			
 			analyzer.generateOriginalEndogeneousSequenceScoreFiles();
 			analyzer.runEliminate();

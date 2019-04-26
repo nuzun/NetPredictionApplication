@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
 import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
@@ -38,16 +37,7 @@ import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceComparator;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;
 
-public class AlloimmunityAnalyzerRoundTwo {
-
-	boolean roundTwo;
-	String donorHlaId;
-	String hlaA1;
-	String hlaA2;
-	String hlaB1;
-	String hlaB2;
-	String hlaProteomeFileFullPath;
-	Map<String, String> conversionMap;
+public class AlloimmunityAnalyzerClassI {
 
 	StringBuilder novelEntry;
 	int nMer;
@@ -81,8 +71,7 @@ public class AlloimmunityAnalyzerRoundTwo {
 
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-	public AlloimmunityAnalyzerRoundTwo() throws IOException {
-
+	public AlloimmunityAnalyzerClassI() throws IOException {
 		novelEntry = new StringBuilder();
 
 		this.setProperties(new PropertiesHelper());
@@ -122,42 +111,13 @@ public class AlloimmunityAnalyzerRoundTwo {
 		this.setNovelSurfacesFileFullPath(properties.getValue("novelSurfacesFileFullPath"));
 		this.alleleGroupData = new AlleleGroupDataDaoImpl(this.getAlleleFileFullPath()).getGroupData();
 
-		this.setRoundTwo(true);
-		this.setHlaProteomeFileFullPath(properties.getValue("hlaProteomeFileFullPath"));
-		initializeHLAConversionMap();
-
 		CustomLogger.setup();
 		LOGGER.setLevel(Level.INFO);
 
 	}
 
-	private void initializeHLAConversionMap() {
-		// TODO Auto-generated method stub
-		conversionMap = new HashMap<String, String>();
-		conversionMap.put("HLA00001", "HLA-A01:01");
-		conversionMap.put("HLA00005", "HLA-A02:01");
-		conversionMap.put("HLA00037", "HLA-A03:01");
-		conversionMap.put("HLA00050", "HLA-A24:02");
-		conversionMap.put("HLA00043", "HLA-A11:01");
-		conversionMap.put("HLA00086", "HLA-A29:02");
-		conversionMap.put("HLA00101", "HLA-A32:01");
-		conversionMap.put("HLA00115", "HLA-A68:01");
-		conversionMap.put("HLA00097", "HLA-A31:01");
-		conversionMap.put("HLA00073", "HLA-A26:01");
-		conversionMap.put("HLA00132", "HLA-B07:02");
-		conversionMap.put("HLA00146", "HLA-B08:01");
-		conversionMap.put("HLA00318", "HLA-B44:02");
-		conversionMap.put("HLA00237", "HLA-B35:01");
-		conversionMap.put("HLA00344", "HLA-B51:01");
-		conversionMap.put("HLA00291", "HLA-B40:01");
-		conversionMap.put("HLA00319", "HLA-B44:03");
-		conversionMap.put("HLA00162", "HLA-B15:01");
-		conversionMap.put("HLA00213", "HLA-B18:01");
-		conversionMap.put("HLA00381", "HLA-B57:01");
-	}
-
 	public void generateOriginalEndogeneousSequenceScoreFiles() throws IOException {
-		LOGGER.entering("AlloimmunityAnalyzerRoundTwo", "generateOriginalEndogeneousSequenceScoreFiles");
+		LOGGER.entering("AlloimmunityAnalyzerClassI", "generateOriginalEndogeneousSequenceScoreFiles");
 		// Read the alleles straight from region/group of alleles file
 
 		// Read the original HLA file HLA-A*02:01
@@ -221,11 +181,11 @@ public class AlloimmunityAnalyzerRoundTwo {
 				}
 			}
 		} // variants
-		LOGGER.exiting("AlloimmunityAnalyzerRoundTwo", "generateOriginalEndogeneousSequenceScoreFiles");
+		LOGGER.exiting("AlloimmunityAnalyzerClassI", "generateOriginalEndogeneousSequenceScoreFiles");
 	}
 
 	public void runEliminate() throws Exception {
-		LOGGER.entering("AlloimmunityAnalyzerRoundTwo", "runEliminate");
+		LOGGER.entering("AlloimmunityAnalyzerClassI", "runEliminate");
 		NetPanDataBuilder builder = new NetPanDataBuilder(this.getPredictionType());
 
 		// Go through each residue difference
@@ -307,12 +267,12 @@ public class AlloimmunityAnalyzerRoundTwo {
 
 		// write the final novel data
 		writeToFinalOutputFile();
-		LOGGER.exiting("AlloimmunityAnalyzerRoundTwo", "runEliminate");
+		LOGGER.exiting("AlloimmunityAnalyzerClassI", "runEliminate");
 
 	}
 
 	private void runProteomeCheck(String allele, String variant, List<PeptideData> remainingPeptides) throws Exception {
-		LOGGER.entering("AlloimmunityAnalyzerRoundTwo", "runProteomeCheck");
+		LOGGER.entering("AlloimmunityAnalyzerClassI", "runProteomeCheck");
 
 		boolean isMatch = false;// positions do not have to match so false
 		// String[] parts = variant.split("-");
@@ -321,8 +281,6 @@ public class AlloimmunityAnalyzerRoundTwo {
 		// String to = parts[2];
 
 		List<Sequence> matchList = new ArrayList<Sequence>();
-		List<Sequence> hlaMatchList = new ArrayList<>();
-
 		NetPanDataBuilder builder = new NetPanDataBuilder(this.getPredictionType());
 		Map<PeptideData, PeptideData> matchMap = new HashMap<>();
 		Map<String, PeptideData> tempMap = new HashMap<>();
@@ -335,15 +293,6 @@ public class AlloimmunityAnalyzerRoundTwo {
 				FastaFileType.ENSEMBLPEP);// compare proteome type
 		rightList.addAll(tempList);
 
-		// read HLA proteomes
-		List<Sequence> rightListHla = new ArrayList<>();
-		File hlaProteomeFileFullPath = new File(this.getHlaProteomeFileFullPath());
-		SequenceComparator sequenceComparatorHla = new SequenceComparator(FastaFileType.HLA, FastaFileType.HLA);
-		List<Sequence> tempListHla = this.getSequenceFactory().getSequenceList(hlaProteomeFileFullPath,
-				FastaFileType.HLA);
-		rightListHla.addAll(tempListHla);
-
-		//
 		NovelPeptideSurface novel = new NovelPeptideSurface();
 		novel.setAllele(allele);
 		novel.setVariant(variant);
@@ -368,63 +317,59 @@ public class AlloimmunityAnalyzerRoundTwo {
 
 			// Returns matching proteome subsequences
 			matchList = sequenceComparator.runMatchFinder(tmpSeqFile, rightList, this.getAnchorPositions(), isMatch,
-					this.getnMer(),this.getnMer());
-
-			// Returns matching hla proteome sequences
-			hlaMatchList = sequenceComparatorHla.runMatchFinder(tmpSeqFile, rightListHla, this.getAnchorPositions(),
-					isMatch, this.getnMer(),this.getnMer());
-
-			// combined match List
-			List<Sequence> combinedMatchList = new ArrayList<>();
-			combinedMatchList.addAll(matchList);
-			combinedMatchList.addAll(hlaMatchList);
-
+					this.getnMer(), this.getnMer());
 			List<PeptideData> matchingPeptides = new ArrayList<>();
 
 			// Run predictions on the matching proteome sequences
-			for (Sequence matchSequence : combinedMatchList) {
+			for (Sequence matchSequence : matchList) {
 
-				String proteomeSeqFileFullContent = ">sp|" + matchSequence.getProteinId() + "\n"
-						+ matchSequence.getSequence();
-				String proteomeSeqFileName = matchSequence.getProteinId() + ".fasta";
-				File proteomeSeqFile = new File(this.getProteomeSequencePath() + proteomeSeqFileName);
+				if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
 
-				if (!proteomeSeqFile.exists()) {
-					FileHelper.writeToFile(proteomeSeqFile, proteomeSeqFileFullContent);
-				}
+					String proteomeSeqFileFullContent = ">sp|" + matchSequence.getProteinId() + "\n"
+							+ matchSequence.getSequence();
+					String proteomeSeqFileName = matchSequence.getProteinId() + ".fasta";
+					File proteomeSeqFile = new File(this.getProteomeSequencePath() + proteomeSeqFileName);
 
-				String proteomeOutputFileFullPath = this.getProteomeOutputFullPath()
-						+ FilenameUtils.removeExtension(proteomeSeqFileName) + "_" + allele + ".txt";
-				File proteomeScoreFileToCreate = new File(proteomeOutputFileFullPath);
-				if (!proteomeScoreFileToCreate.exists()) {
-					NetPanCmd.run(this.getPredictionType(), this.getScoreCode(), String.valueOf(this.getnMer()), allele,
-							proteomeSeqFile.getPath(), proteomeOutputFileFullPath);
-				}
-				NetPanData protNetPanData = builder.buildSingleFileData(new File(proteomeOutputFileFullPath));
-
-				String matchId = matchSequence.getProteinId().split("_")[0];// ENSP00000403922.1
-																			// or
-																			// HLA00001
-
-				/*********** helpful output ***********************/
-				StringBuilder sb = new StringBuilder();
-				sb.append(matchSequence.getProteinId() + "\n");
-
-				// exclude some from proteome check
-				if ((!excluded.contains(matchId)) && (!isExcludedHlaProteome(matchId, variant, allele))) {
-					for (PeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
-							this.getAnchorPositions(), isMatch)) {
-						sb.append(pep.toString());
+					if (!proteomeSeqFile.exists()) {
+						FileHelper.writeToFile(proteomeSeqFile, proteomeSeqFileFullContent);
 					}
-				}
-				LOGGER.info(sb.toString());
 
-				/************************************************/
+					String proteomeOutputFileFullPath = this.getProteomeOutputFullPath()
+							+ FilenameUtils.removeExtension(proteomeSeqFileName) + "_" + allele + ".txt";
+					File proteomeScoreFileToCreate = new File(proteomeOutputFileFullPath);
+					if (!proteomeScoreFileToCreate.exists()) {
+						NetPanCmd.run(this.getPredictionType(), this.getScoreCode(), String.valueOf(this.getnMer()),
+								allele, proteomeSeqFile.getPath(), proteomeOutputFileFullPath);
+					}
+					NetPanData protNetPanData = builder.buildSingleFileData(new File(proteomeOutputFileFullPath));
 
-				// exclude some from proteome check
-				if ((!excluded.contains(matchId)) && (!isExcludedHlaProteome(matchId, variant, allele))) {
-					matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedMatch(remaining.getPeptide(),
-							this.getAnchorPositions(), isMatch));
+					/*********** helpful output ***********************/
+					StringBuilder sb = new StringBuilder();
+					sb.append(matchSequence.getProteinId() + "\n");
+
+					// exclude some from proteome check
+					if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
+						for (PeptideData pep : protNetPanData.getSpecificPeptideDataByMaskedMatch(
+								remaining.getPeptide(), this.getAnchorPositions(), isMatch)) {
+							sb.append(pep.toString());
+						}
+					}
+					LOGGER.info(sb.toString());
+
+					/************************************************/
+
+					// exclude some from proteome check
+					if (!excluded.contains(matchSequence.getProteinId().split("_")[0])) {
+						matchingPeptides.addAll(protNetPanData.getSpecificPeptideDataByMaskedMatch(
+								remaining.getPeptide(), this.getAnchorPositions(), isMatch));
+					}
+					
+				} else {
+					StringBuilder sb = new StringBuilder();
+					sb.append(matchSequence.getProteinId() + "-exc" + "\n");
+
+					LOGGER.info(sb.toString());
+
 				}
 
 			} // proteome matches
@@ -484,145 +429,8 @@ public class AlloimmunityAnalyzerRoundTwo {
 
 		printNovelObejct(novel);
 
-		LOGGER.exiting("AlloimmunityAnalyzerRoundTwo", "runProteomeCheck");
+		LOGGER.exiting("AlloimmunityAnalyzerClassI", "runProteomeCheck");
 
-	}
-
-	/*
-	 * HLA Proteome includes only major sequences from 20 including donors.
-	 * Donors are eliminated immediately.
-	 */
-	private boolean isExcludedHlaProteome(String matchId, String variant, String allele) {
-		// matchId like HLA00001
-		// simple should be HLA-A01:01
-		// proteome matches can be the major alleles from the list 20
-
-		String simpleMatchId = getSimpleAlleleId(matchId);
-
-		if (this.getDonorHlaId().equals(simpleMatchId)) {
-			// exclude
-			return true;
-		}
-
-		if (StringUtils.isNotBlank(this.getHlaA1()) && StringUtils.isNotBlank(this.getHlaB2())) {
-
-			// analysing A and square is coloured for B allele b2
-			// for (a of A alleles){
-			// include a + all B's
-			// }
-
-			if (isHLAA(allele)) {
-
-				if (this.getHlaA1().equals(allele)) {
-					return false;// include all major As and Bs
-				}
-
-				else if (!(simpleMatchId.equals(allele) || isHLAB(simpleMatchId))) {
-					// exclude
-					return true;
-				}
-			}
-
-			// for(b of B alleles){
-			// include b + b2 + All A's (exclude a1 and donorHLA )
-			// }
-			else if (isHLAB(allele)) {
-
-				if (simpleMatchId.equals(this.getHlaA1()) || simpleMatchId.equals(this.getDonorHlaId())) {
-					return true;
-				}
-				if (!(simpleMatchId.equals(allele) || isHLAA(simpleMatchId) || simpleMatchId.equals(this.getHlaB2()))) {
-					// exclude
-					return true;
-				}
-			}
-
-		} else if (StringUtils.isNotBlank(this.getHlaB1()) && StringUtils.isNotBlank(this.getHlaA2())) {
-
-			// analysing B and square is coloured for A allele a2
-			// for (a of A alleles){
-			// include a + a2 + all B's (exclude b1 and donorHLA)
-			// }
-			if (isHLAA(allele)) {
-
-				if (simpleMatchId.equals(this.getHlaB1()) || simpleMatchId.equals(this.getDonorHlaId())) {
-					return true;
-				}
-				if (!(simpleMatchId.equals(allele) || isHLAB(simpleMatchId) || simpleMatchId.equals(this.getHlaA2()))) {
-					// exclude
-					return true;
-				}
-			}
-
-			// for (b of B alleles){
-			// include b + all A's
-			// }
-			else if (isHLAB(allele)) {
-
-				if (this.getHlaB1().equals(allele)) {
-					return false;// include all major As and Bs
-				} else if (!(simpleMatchId.equals(allele) || isHLAA(simpleMatchId))) {
-					// exclude
-					return true;
-				}
-			}
-		}
-
-		else if (StringUtils.isNotBlank(this.getHlaA1()) && StringUtils.isNotBlank(this.getHlaA2())) {
-			// analysing A and square is coloured for a2
-			// LHN becomes a1, a2 and all B
-			// include all B's and a2
-
-			if (!(isHLAB(simpleMatchId) || this.getHlaA2().equals(simpleMatchId))) {
-				// exclude
-				return true;
-			}
-		} else if (StringUtils.isNotBlank(this.getHlaB1()) && StringUtils.isNotBlank(this.getHlaB2())) {
-			// analysing B and square is coloured for b2
-			// LHN becomes b1,b2 and all A
-			// include All A's and b2
-
-			if (!(isHLAA(simpleMatchId) || this.getHlaB2().equals(simpleMatchId))) {
-				// exclude
-				return true;
-			}
-		} else {
-			throw new IllegalArgumentException("Invalid arguments:" + this.getHlaA1() + "," + this.getHlaA2() + ","
-					+ this.getHlaB1() + "," + this.getHlaB2());
-		}
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private String getSimpleAlleleId(String matchId) {
-		// from HLA00001 to HLA-A01:01
-		if(StringUtils.isBlank(this.conversionMap.get(matchId))){
-			System.out.println("Update conversion map!");
-			throw new IllegalArgumentException("Update conversio map!!!");
-
-		}
-		return this.conversionMap.get(matchId);
-
-	}
-
-	private boolean isHLAA(String a) {
-		if (StringUtils.isNotBlank(a)) {
-			if (a.startsWith("HLA-A")) {
-				return true;
-			} else
-				return false;
-		} else
-			throw new IllegalArgumentException();
-	}
-
-	private boolean isHLAB(String b) {
-		if (StringUtils.isNotBlank(b)) {
-			if (b.startsWith("HLA-B")) {
-				return true;
-			} else
-				return false;
-		} else
-			throw new IllegalArgumentException();
 	}
 
 	private void printNovelObejct(NovelPeptideSurface novel) {
@@ -674,9 +482,9 @@ public class AlloimmunityAnalyzerRoundTwo {
 	}
 
 	private void writeToFinalOutputFile() throws IOException {
-		LOGGER.entering("AlloimmunityAnalyzer", "writeToFinalOutputFile");
+		LOGGER.entering("AlloimmunityAnalyzerClassI", "writeToFinalOutputFile");
 
-		String header = "Variant,Allele,Peptide1,IC50_1,Peptide2,IC50_2,Colour";
+		String header = "Variant,Allele,Peptide_1,IC50_1,Peptide_2,IC50_2,Colour";
 		String newLine = "\n";
 
 		File file = new File(this.getNovelSurfacesFileFullPath());
@@ -689,7 +497,7 @@ public class AlloimmunityAnalyzerRoundTwo {
 		Path path = Paths.get(this.getNovelSurfacesFileFullPath());
 		Files.write(path, novelEntry.toString().getBytes(), StandardOpenOption.APPEND);
 
-		LOGGER.exiting("AlloimmunityAnalyzerRoundTwo", "writeToFinalOutputFile");
+		LOGGER.exiting("AlloimmunityAnalyzerClassI", "writeToFinalOutputFile");
 	}
 
 	private void readVariantFile(File variantFile) throws FileNotFoundException {
@@ -724,8 +532,10 @@ public class AlloimmunityAnalyzerRoundTwo {
 		}
 	}
 
-	// ======================== Setters and getters start
-	// ===============================================
+	/****************************
+	 * GETTERS and SETTERS
+	 *****************************/
+
 	public int getnMer() {
 		return nMer;
 	}
@@ -900,62 +710,6 @@ public class AlloimmunityAnalyzerRoundTwo {
 
 	public void setExcludeFileFullPath(String excludeFileFullPath) {
 		this.excludeFileFullPath = excludeFileFullPath;
-	}
-
-	public boolean isRoundTwo() {
-		return roundTwo;
-	}
-
-	public void setRoundTwo(boolean roundTwo) {
-		this.roundTwo = roundTwo;
-	}
-
-	public String getHlaProteomeFileFullPath() {
-		return hlaProteomeFileFullPath;
-	}
-
-	public void setHlaProteomeFileFullPath(String hlaProteomeFileFullPath) {
-		this.hlaProteomeFileFullPath = hlaProteomeFileFullPath;
-	}
-
-	public String getDonorHlaId() {
-		return donorHlaId;
-	}
-
-	public void setDonorHlaId(String donorHlaId) {
-		this.donorHlaId = donorHlaId;
-	}
-
-	public String getHlaA1() {
-		return hlaA1;
-	}
-
-	public void setHlaA1(String hlaA1) {
-		this.hlaA1 = hlaA1;
-	}
-
-	public String getHlaA2() {
-		return hlaA2;
-	}
-
-	public void setHlaA2(String hlaA2) {
-		this.hlaA2 = hlaA2;
-	}
-
-	public String getHlaB1() {
-		return hlaB1;
-	}
-
-	public void setHlaB1(String hlaB1) {
-		this.hlaB1 = hlaB1;
-	}
-
-	public String getHlaB2() {
-		return hlaB2;
-	}
-
-	public void setHlaB2(String hlaB2) {
-		this.hlaB2 = hlaB2;
 	}
 
 }
