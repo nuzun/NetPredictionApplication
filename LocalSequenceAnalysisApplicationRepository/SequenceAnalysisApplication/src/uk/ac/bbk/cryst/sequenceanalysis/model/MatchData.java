@@ -77,7 +77,7 @@ public class MatchData {
 		this.peptide1 = peptide1;
 		this.peptide2 = peptide2;
 	}
-	
+
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("protein1:" + getProteinId1() + "\tpos1:"+ getPosition1() + "\tpeptide1:" + getPeptide1() + "\t");

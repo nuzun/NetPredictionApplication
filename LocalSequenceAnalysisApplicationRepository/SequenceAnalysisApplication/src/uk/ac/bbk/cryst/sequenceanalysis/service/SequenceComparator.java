@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
 import uk.ac.bbk.cryst.sequenceanalysis.model.MatchData;
+import uk.ac.bbk.cryst.sequenceanalysis.model.MatchDataClassII;
 import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 
 public class SequenceComparator {
@@ -53,7 +54,8 @@ public class SequenceComparator {
 	 * @param seq2List
 	 * @param positions
 	 * @param isMatch
-	 * @param kmer
+	 * @param kmer this is mainly 9mer as core
+	 * panningMer is 9mer or 15mer depending on the method
 	 * @return
 	 * @throws IOException
 	 */
@@ -111,7 +113,7 @@ public class SequenceComparator {
 	
 
 	public List<Sequence> runMatchFinder(Sequence inputSequence, List<Sequence> seq2List, List<Integer> positions,
-			boolean isMatch, int kmer) throws IOException {
+			boolean isMatch, int kmer, int panningMer) throws IOException {
 		List<Sequence> matchList = new ArrayList<Sequence>();
 
 		// compare seq1 to each seq2,
@@ -135,7 +137,7 @@ public class SequenceComparator {
 			// name the sequence with its original name_match position
 			for (MatchData match : matchMap) {
 				int matchPosition = match.getPosition2();
-				String panningSeq = seq2.getPanningSequence(matchPosition + 1, kmer);// need
+				String panningSeq = seq2.getPanningSequence(matchPosition + 1, panningMer);// need
 																					// to
 																					// pass
 																					// +1
@@ -157,78 +159,17 @@ public class SequenceComparator {
 
 	}
 	
+
 	/**
-	 * We pass the comparePath and read the list in the method
-	 * 
-	 * @param inputFile
-	 * @param comparePath
-	 * @param positions
-	 * @param isMatch
-	 * @param kmer
-	 * @return
-	 * @throws IOException
+	 * Prints the results to a csv file
+	 * This can be used to retrieve only coreMer or classI
 	 */
-	public List<Sequence> runMatchFinder(File inputFile, String comparePath, List<Integer> positions, boolean isMatch,
-			int kmer) throws IOException {
-		List<Sequence> matchList = new ArrayList<Sequence>();
-
-		SequenceFactory sequenceFactory = new SequenceFactory();
-		// read the dir and the first file as we know there is only one for the
-		// first file
-		Sequence seq1 = sequenceFactory.getSequenceList(inputFile, inputFileType).get(0);
-
-		// read the compareDir and all the files as there might be more than one
-		File compareDir = new File(comparePath);
-		for (final File fileEntry : compareDir.listFiles()) {
-			if (fileEntry.isDirectory()) {
-				// ignore the directory and continue, we want one compare file
-				continue;
-			}
-			List<Sequence> tempList = sequenceFactory.getSequenceList(fileEntry, compareFileType);
-			seq2List.addAll(tempList);
-		}
-
-		// compare seq1 to each seq2,
-		for (Sequence seq2 : seq2List) {
-
-			List<MatchData> matchMap = SequenceComparator.generateMatchMap(seq1, seq2, positions, isMatch, kmer);
-
-			if (SequenceComparator.isIdentical(seq1, seq2)) {
-				// LOGGER.info(seq1.getProteinId() + " vs " +
-				// seq2.getProteinId() + " = IDENTICAL");
-				continue;
-			}
-
-			if (matchMap.size() == 0) {
-				// LOGGER.info(seq1.getProteinId() + " vs " +
-				// seq2.getProteinId() + " = NO MATCHES");
-				continue;
-			}
-
-			// instead of adding the full sequence just get the panning sequence
-			// name the sequence with its original name_match position
-			for (MatchData match : matchMap) {
-				int matchPosition = match.getPosition2();
-				String panningSeq = seq2.getPanningSequence(matchPosition + 1, kmer);
-				String newId = seq2.getProteinId() + "_" + matchPosition;
-				Sequence newSeq = new Sequence(newId, panningSeq) {
-				};
-				matchList.add(newSeq);
-			}
-		}
-		return matchList;
-
-	}
-
-	/*
-	 * prints the results to a csv file
-	 */
-	public void runMatchFinder(Sequence seq1, List<Sequence> seq2List, String outPath, List<Integer> positions,
+	public void findAndPrintMatches(Sequence seq1, List<Sequence> seq2List, String resultsFilePath, List<Integer> positions,
 			boolean isMatch, int kmer) throws IOException {
 		
 		// copy the results to a csv file in the csv path
 		File outFile = new File(
-				outPath + seq1.getProteinId() + "_" + kmer + "_vs_" + generatePositionStr(positions) + ".csv");
+				resultsFilePath + seq1.getProteinId() + "_" + kmer + "_vs_" + generatePositionStr(positions) + ".csv");
 
 		try {
 			if (!outFile.exists()) {
@@ -273,16 +214,120 @@ public class SequenceComparator {
 
 		bw.close();
 	}
+	
+	
+	public void findAndPrintMatchesClassII(Sequence seq1, List<Sequence> seq2List, String outPath, List<Integer> positions,
+			boolean isMatch, int kmer, int panningMer) throws IOException {
+		
+		// copy the results to a csv file in the csv path
+		File outFile = new File(
+				outPath + seq1.getProteinId() + "_" + panningMer + "_vs_" + generatePositionStr(positions) + ".csv");
 
+		try {
+			if (!outFile.exists()) {
+				outFile.createNewFile();
+			}
+		} catch (Exception ex) {
+			LOGGER.severe("Exception occurred creating the file:");
+			ex.printStackTrace();
+			throw new RuntimeException("Exception occurred creating the file");
+		}
+
+		// populate the match file
+		FileWriter fw = new FileWriter(outFile.getAbsoluteFile());
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(printFields);
+		bw.newLine();
+
+		// compare seq1 to each seq2,
+		for (Sequence seq2 : seq2List) {
+
+			List<MatchDataClassII> matchMap = SequenceComparator.generateMatchMapClassII(seq1, seq2, positions, isMatch, kmer, panningMer);
+
+			if (SequenceComparator.isIdentical(seq1, seq2)) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = IDENTICAL");
+				continue;
+			}
+
+			if (matchMap.size() == 0) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = NO MATCHES");
+				continue;
+			}
+
+			for (MatchDataClassII match : matchMap) {
+				bw.write(match.toStringOnlyValues());
+				bw.newLine();
+				//System.out.println(match.toStringOnlyValues());
+			}
+
+		}
+
+		bw.close();
+	}
+
+	/**
+	 * This method only returns if we are only interested in coreMer matches
+	 * or class I matches
+	 * @param seq1
+	 * @param seq2List
+	 * @param positions
+	 * @param isMatch
+	 * @param kmer
+	 * @return
+	 * @throws IOException
+	 */
 	public List<MatchData> getMatchData(Sequence seq1, List<Sequence> seq2List, List<Integer> positions,
 			boolean isMatch, int kmer) throws IOException {
-
+		
 		List<MatchData> matchMap = new ArrayList<>();
 		List<MatchData> tmpMap = new ArrayList<>();
 		// compare seq1 to each seq2,
 		for (Sequence seq2 : seq2List) {
 
 			tmpMap = SequenceComparator.generateMatchMap(seq1, seq2, positions, isMatch, kmer);
+
+			if (SequenceComparator.isIdentical(seq1, seq2)) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = IDENTICAL");
+				continue;
+			}
+
+			if (tmpMap.size() == 0) {
+				// LOGGER.info(seq1.getProteinId() + " vs " +
+				// seq2.getProteinId() + " = NO MATCHES");
+				continue;
+			}
+			
+			matchMap.addAll(tmpMap);
+		}
+		return matchMap;
+		
+	}
+	
+	
+	/**
+	 * This method will be used for ClassII as we need core match data
+	 * as well as the panning 15mer for the matching data
+	 * @param seq1
+	 * @param seq2List
+	 * @param positions
+	 * @param isMatch
+	 * @param coreNmer
+	 * @param nMer
+	 * @return
+	 * @throws IOException
+	 */
+	public List<MatchDataClassII> getMatchData(Sequence seq1, List<Sequence> seq2List, List<Integer> positions,
+			boolean isMatch, int coreNmer, int nMer) throws IOException {
+		
+		List<MatchDataClassII> matchMap = new ArrayList<>();
+		List<MatchDataClassII> tmpMap = new ArrayList<>();
+		// compare seq1 to each seq2,
+		for (Sequence seq2 : seq2List) {
+
+			tmpMap = SequenceComparator.generateMatchMapClassII(seq1, seq2, positions, isMatch, coreNmer,nMer);
 
 			if (SequenceComparator.isIdentical(seq1, seq2)) {
 				// LOGGER.info(seq1.getProteinId() + " vs " +
@@ -349,6 +394,9 @@ public class SequenceComparator {
 		}
 	}
 
+	/**
+	 * This method is the usual method to generate the 9mer/coreMer match data 
+	 */
 	public static List<MatchData> generateMatchMap(Sequence seq1, Sequence seq2, List<Integer> positions, boolean cond,
 			int peptideLength) {
 
@@ -374,6 +422,44 @@ public class SequenceComparator {
 		return matchList;
 
 	}
+	
+	/**
+	 * We will use this method to capture the 15mer as we only match
+	 * core 9mer for pattern search 
+	 * @param seq1
+	 * @param seq2
+	 * @param positions
+	 * @param cond
+	 * @param peptideLength
+	 * @return
+	 */
+	public static List<MatchDataClassII> generateMatchMapClassII(Sequence seq1, Sequence seq2, List<Integer> positions, 
+			boolean cond,int kMer, int nMer) {
+
+		List<MatchDataClassII> matchList = new ArrayList<MatchDataClassII>();
+
+		Map<Integer, String> seq1Map = PeptideGenerator.getPositionPeptideMap(seq1, kMer);
+		Map<Integer, String> seq2Map = PeptideGenerator.getPositionPeptideMap(seq2, kMer);
+
+		for (Integer pos1 : seq1Map.keySet()) {
+			String peptide1 = seq1Map.get(pos1);
+
+			for (Integer pos2 : seq2Map.keySet()) {
+				String peptide2 = seq2Map.get(pos2);
+
+				if (isMatch(peptide1, peptide2, positions, cond)) {
+					MatchDataClassII newMatch = new MatchDataClassII(
+							seq1.getProteinId(), pos1, peptide1,seq1.getPanningSequence(pos1, nMer),
+							seq2.getProteinId(), pos2, peptide2,seq2.getPanningSequence(pos2, nMer));
+					matchList.add(newMatch);
+				}
+			}
+		}
+
+		return matchList;
+
+	}
+	
 
 	public static boolean isIdentical(Sequence seq1, Sequence seq2) {
 		if (seq1.length() != seq2.length()) {

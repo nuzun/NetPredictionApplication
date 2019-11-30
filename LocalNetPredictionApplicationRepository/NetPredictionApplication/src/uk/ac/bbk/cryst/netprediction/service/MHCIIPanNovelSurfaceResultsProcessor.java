@@ -28,8 +28,9 @@ public class MHCIIPanNovelSurfaceResultsProcessor {
 	PredictionType predictionType;
 	List<HeatMapBox> boxList = new ArrayList<>();
 	Map<String, String> nomenclatureList;
+	String fileExtension;
 
-	public MHCIIPanNovelSurfaceResultsProcessor(boolean proteomeScanning, PredictionType predictionType)
+	public MHCIIPanNovelSurfaceResultsProcessor(boolean proteomeScanning, PredictionType predictionType, String fileExtension)
 			throws IOException {
 		super();
 		this.properties = new PropertiesHelper();
@@ -46,6 +47,7 @@ public class MHCIIPanNovelSurfaceResultsProcessor {
 
 		this.setPredictionType(predictionType);
 		this.setProteomeScanningOn(proteomeScanning);
+		this.setFileExtension(fileExtension);
 
 	}
 
@@ -156,7 +158,7 @@ public class MHCIIPanNovelSurfaceResultsProcessor {
 		}
 
 		File file = new File(
-				"data//output//heatmap_" + this.getPredictionType() + "_" + this.isProteomeScanningOn() + ".csv");
+				"data//output//heatmap_" + this.getPredictionType() + "_" + this.isProteomeScanningOn() + fileExtension + ".csv");
 		FileHelper.writeToFile(file, fullContent);
 	}
 
@@ -217,6 +219,14 @@ public class MHCIIPanNovelSurfaceResultsProcessor {
 		this.boxList = boxList;
 	}
 
+	public String getFileExtension() {
+		return fileExtension;
+	}
+
+	public void setFileExtension(String fileExtension) {
+		this.fileExtension = fileExtension;
+	}
+	
 	private void setNomenclature() {
 		nomenclatureList = new HashMap<>();
 		nomenclatureList.put("HLA-DPA10103-DPB10201", "HLA-DPA1*01:03-DPB1*02:01");
@@ -242,6 +252,10 @@ public class MHCIIPanNovelSurfaceResultsProcessor {
 		nomenclatureList.put("DRB1_1101", "HLA-DRB1*11:01");
 		nomenclatureList.put("DRB1_1302", "HLA-DRB1*13:02");
 		nomenclatureList.put("DRB1_1501", "HLA-DRB1*15:01");
+		nomenclatureList.put("DRB1_1502", "HLA-DRB1*15:02");
+		nomenclatureList.put("DRB1_1503", "HLA-DRB1*15:03");
+		nomenclatureList.put("DRB1_1504", "HLA-DRB1*15:04");
+		nomenclatureList.put("DRB1_1507", "HLA-DRB1*15:07");
 		nomenclatureList.put("DRB3_0101", "HLA-DRB3*01:01");
 		nomenclatureList.put("DRB4_0101", "HLA-DRB4*01:01");
 		nomenclatureList.put("DRB5_0101", "HLA-DRB5*01:01");

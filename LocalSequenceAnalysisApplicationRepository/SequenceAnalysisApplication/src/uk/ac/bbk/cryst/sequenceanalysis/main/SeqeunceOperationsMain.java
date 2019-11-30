@@ -21,7 +21,8 @@ public class SeqeunceOperationsMain {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-				
+		
+		/*
 		SequenceAnalysisProperties programProperties = new SequenceAnalysisProperties();
 
 		SequenceFactory sequenceFactory = new SequenceFactory();
@@ -39,7 +40,7 @@ public class SeqeunceOperationsMain {
 			System.out.println("==========================================================================");
 		}
 		
-		
+		*/
 		//Generates position numbers starting from 1
 		//SequenceOperationsHelper.generatePositionNumbers(seq1);
 		
@@ -52,6 +53,45 @@ public class SeqeunceOperationsMain {
 		
 		//String newSeq = SequenceOperationsHelper.changeSequence(seq1, changeMap);
 		//System.out.println(newSeq);
+		
+		SequenceFactory sequenceFactory = new SequenceFactory();
+		
+		File pairFile = new File("/home/nuzun/Desktop/HLA_Allo_Analysis/Class_I/"
+				+ "HLAB4405(donor)_vs_HLAB4404(recipient).txt");
+		
+		List<Sequence> seqList = sequenceFactory.getSequenceList(pairFile, FastaFileType.HLA);
+		
+		String s1 = "";
+		String s2 = "";
+
+		if(seqList.size() > 2){
+			System.out.println("Something wrong!");
+		}
+		
+		s1 = seqList.get(0).getSequence();
+		s2 = seqList.get(1).getSequence();
+		
+
+		if(s1.length() != s2.length()){
+			System.out.println("Not the same length");
+			return;
+		}
+		else{
+			System.out.println(seqList.get(0).getProteinId());
+			System.out.println(seqList.get(1).getProteinId());
+
+			System.out.println(s1.length());
+		}
+		
+		for(int i=0; i< s1.length() && i< s2.length();i++){
+			if (s1.charAt(i) == s2.charAt(i)){
+				//System.out.println("Y");
+			}
+			else{
+				System.out.println(s1.charAt(i)+ "-" + (i+1) + "-"+s2.charAt(i));
+			}
+				
+		}
 
 	}
 

@@ -69,12 +69,13 @@ public class MHCINovelSurfaceProcessorHelper {
 
 	}
 
-	public List<String> readAlleleFile(PredictionType type) throws FileNotFoundException {
+	public List<String> readAlleleFile(PredictionType type) throws IOException {
 		List<String> alleles = new ArrayList<>();
 		String path = null;
 		switch (type) {
 		case CTLPAN:
-			path = "data//input//mhcI.csv";
+			//path = "data//input//mhcI.csv";
+			path = properties.getValue("alleleFileFullPath");
 			break;
 		default:
 			path = "data//input//mhcI_full_list.csv";

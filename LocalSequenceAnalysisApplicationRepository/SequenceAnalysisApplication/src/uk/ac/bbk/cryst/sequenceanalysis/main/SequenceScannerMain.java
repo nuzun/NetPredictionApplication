@@ -22,7 +22,7 @@ public class SequenceScannerMain {
 	static int kmer = 9;
 	static boolean isMatch = false;// pos 2 and 9 do not have to match so
 									// cond=false
-	static List<Integer> positions = Arrays.asList(2,kmer);
+	static List<Integer> positions = Arrays.asList(1,4,6,9);
 	static String sequenceFileFullPath;
 	static String compareFileFullPath;
 	static FastaFileType inputType;
@@ -42,7 +42,7 @@ public class SequenceScannerMain {
 	 *
 	 */
 	public static void main(String[] args) throws Exception {
-		inputType = FastaFileType.HLA;
+		inputType = FastaFileType.UNIPROT;
 		compareType = FastaFileType.ENSEMBLPEP;
 		sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
 		compareFileFullPath = properties.getValue("compareFileFullPath");
@@ -54,9 +54,7 @@ public class SequenceScannerMain {
 
 	static void scanFile() throws IOException {
 
-		SequenceComparator sequenceComparator = new SequenceComparator();
-		sequenceComparator.setInputFileType(inputType);
-		sequenceComparator.setCompareFileType(compareType);
+		SequenceComparator sequenceComparator = new SequenceComparator(inputType,compareType);
 
 		File sequenceFile = new File(sequenceFileFullPath);
 		List<Sequence> seq1List = sequenceFactory.getSequenceList(sequenceFile, inputType);
@@ -74,7 +72,7 @@ public class SequenceScannerMain {
 		}
 
 		for (Sequence seq1 : seq1List) {
-			sequenceComparator.runMatchFinder(seq1, seq2List, outputPath, positions, isMatch, kmer);
+			sequenceComparator.findAndPrintMatches(seq1, seq2List, outputPath, positions, isMatch, kmer);
 		}
 
 	}
@@ -103,7 +101,7 @@ public class SequenceScannerMain {
 			throw new RuntimeException("Problems with creating the log files");
 		}
 
-		sequenceComparator.runMatchFinder(seq1, seq2List, outputPath, positions, isMatch, kmer);
+		sequenceComparator.findAndPrintMatches(seq1, seq2List, outputPath, positions, isMatch, kmer);
 
 	}
 

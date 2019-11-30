@@ -28,8 +28,9 @@ public class MHCINovelSurfaceResultsProcessor {
 	PredictionType predictionType;
 	List<HeatMapBox> boxList = new ArrayList<>();
 	Map<String, String> nomenclatureList;
+	String fileExtension;
 
-	public MHCINovelSurfaceResultsProcessor(boolean proteomeScanning, PredictionType predictionType)
+	public MHCINovelSurfaceResultsProcessor(boolean proteomeScanning, PredictionType predictionType, String fileExtension)
 			throws IOException {
 		super();
 		this.properties = new PropertiesHelper();
@@ -46,6 +47,7 @@ public class MHCINovelSurfaceResultsProcessor {
 
 		this.setPredictionType(predictionType);
 		this.setProteomeScanningOn(proteomeScanning);
+		this.setFileExtension(fileExtension);
 
 	}
 
@@ -155,7 +157,7 @@ public class MHCINovelSurfaceResultsProcessor {
 		}
 
 		File file = new File(
-				"data//output//heatmap_" + this.getPredictionType() + "_" + this.isProteomeScanningOn() + ".csv");
+				"data//output//heatmap_" + this.getPredictionType() + "_" + this.isProteomeScanningOn() + fileExtension +".csv");
 		FileHelper.writeToFile(file, fullContent);
 	}
 
@@ -215,35 +217,64 @@ public class MHCINovelSurfaceResultsProcessor {
 	public void setBoxList(List<HeatMapBox> boxList) {
 		this.boxList = boxList;
 	}
+	
+
+	public String getFileExtension() {
+		return fileExtension;
+	}
+
+	public void setFileExtension(String fileExtension) {
+		this.fileExtension = fileExtension;
+	}
 
 	private void setNomenclature() {
 		nomenclatureList = new HashMap<>();
 		nomenclatureList.put("HLA-A02:01", "HLA-A*02:01");
 		nomenclatureList.put("HLA-A02:02", "HLA-A*02:02");
 		nomenclatureList.put("HLA-A02:03", "HLA-A*02:03");
+		nomenclatureList.put("HLA-A02:05", "HLA-A*02:05");
 		nomenclatureList.put("HLA-A02:06", "HLA-A*02:06");
+		nomenclatureList.put("HLA-A02:07", "HLA-A*02:07");
 		nomenclatureList.put("HLA-A01:01", "HLA-A*01:01");
 		nomenclatureList.put("HLA-A03:01", "HLA-A*03:01");
+		nomenclatureList.put("HLA-A03:02", "HLA-A*03:02");
 		nomenclatureList.put("HLA-A24:02", "HLA-A*24:02");
+		nomenclatureList.put("HLA-A24:20", "HLA-A*24:20");
 		nomenclatureList.put("HLA-A11:01", "HLA-A*11:01");
 		nomenclatureList.put("HLA-A29:02", "HLA-A*29:02");
 		nomenclatureList.put("HLA-A32:01", "HLA-A*32:01");
 		nomenclatureList.put("HLA-A68:01", "HLA-A*68:01");
 		nomenclatureList.put("HLA-A31:01", "HLA-A*31:01");
 		nomenclatureList.put("HLA-A26:01", "HLA-A*26:01");
+		nomenclatureList.put("HLA-A26:02", "HLA-A*26:02");
+		nomenclatureList.put("HLA-A26:03", "HLA-A*26:03");
+		nomenclatureList.put("HLA-A33:03", "HLA-A*33:03");
+
 		nomenclatureList.put("HLA-B07:02", "HLA-B*07:02");
 		nomenclatureList.put("HLA-B07:03", "HLA-B*07:03");
 		nomenclatureList.put("HLA-B07:04", "HLA-B*07:04");
 		nomenclatureList.put("HLA-B07:05", "HLA-B*07:05");
+		nomenclatureList.put("HLA-B07:06", "HLA-B*07:06");
 		nomenclatureList.put("HLA-B07:07", "HLA-B*07:07");
+		nomenclatureList.put("HLA-B07:09", "HLA-B*07:09");
 		nomenclatureList.put("HLA-B08:01", "HLA-B*08:01");
 		nomenclatureList.put("HLA-B44:02", "HLA-B*44:02");
 		nomenclatureList.put("HLA-B35:01", "HLA-B*35:01");
 		nomenclatureList.put("HLA-B51:01", "HLA-B*51:01");
 		nomenclatureList.put("HLA-B40:01", "HLA-B*40:01");
+		nomenclatureList.put("HLA-B40:02", "HLA-B*40:02");
+		nomenclatureList.put("HLA-B40:06", "HLA-B*40:06");
 		nomenclatureList.put("HLA-B44:03", "HLA-B*44:03");
 		nomenclatureList.put("HLA-B15:01", "HLA-B*15:01");
+		nomenclatureList.put("HLA-B15:07", "HLA-B*15:07");
 		nomenclatureList.put("HLA-B18:01", "HLA-B*18:01");
 		nomenclatureList.put("HLA-B57:01", "HLA-B*57:01");
+		nomenclatureList.put("HLA-B52:01", "HLA-B*52:01");
+		nomenclatureList.put("HLA-B54:01", "HLA-B*54:01");
+		nomenclatureList.put("HLA-B14:02", "HLA-B*14:02");
+		nomenclatureList.put("HLA-B44:05", "HLA-B*44:05");
+		nomenclatureList.put("HLA-B44:04", "HLA-B*44:04");
+
+
 	}
 }

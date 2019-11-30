@@ -2,6 +2,7 @@ package uk.ac.bbk.cryst.netprediction.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -11,9 +12,12 @@ import java.util.Scanner;
 import static java.util.stream.Collectors.*;
 import static java.util.Map.Entry.*;
 
+import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.model.HeatMapTable;
 
 public class HeatMapTableHelper {
+	
+	private static String fullContent="";
 
 	public static void readHeatMapFiles(String heatMapFile) throws FileNotFoundException{
 	    List<HeatMapTable> heatMapRows = new ArrayList<>();
@@ -49,14 +53,19 @@ public class HeatMapTableHelper {
 		scanner.close();
 		
 		System.out.println(heatMapFile);
+		fullContent+=heatMapFile + "\n";
+		
 		for(HeatMapTable h: heatMapRows){
 			System.out.println(h.getVariant());
 			System.out.println("binders:" + h.getTotalBinders());
 			System.out.println("blacksGreys:" + h.getTotalBlackGreys());
 			
 			System.out.println();
-
 			
+			fullContent+= h.getVariant() + "\n";
+			fullContent+= "binders:" + h.getTotalBinders()+ "\n";
+			fullContent+= "blacksGreys:" + h.getTotalBlackGreys()+ "\n";
+			fullContent+="\n";
 		}
 		
 	}
@@ -96,6 +105,8 @@ public class HeatMapTableHelper {
 		
 		for(String a :sorted.keySet()){
 			System.out.println(a + " : " + alleleMap.get(a));
+			fullContent+=a + " : " + alleleMap.get(a) + "\n";
+			
 			if(alleleMap.get(a) > 0){
 				totalColouredSquares++;
 			}
@@ -107,17 +118,26 @@ public class HeatMapTableHelper {
 		System.out.println("Coloured:" + totalColouredSquares);
 		System.out.println("Blacks:" + totalBlacks);
 		
+		fullContent+="Coloured:" + totalColouredSquares + "\n";
+		fullContent+="Blacks:" + totalBlacks + "\n";
+		
 		
 	}
 	
-	public static void main(String[] args) throws FileNotFoundException {
-		String heatMapFile = "data//output//heatmap_CTLPAN_false_A0206_A0202.csv";
+	public static void main(String[] args) throws IOException {
+		
+		PropertiesHelper properties = new PropertiesHelper();
+
+		String heatMapFile = "data//output//heatmap_MHCIIPAN31_false" + properties.getValue("fileExtension") +".csv";
 
 		readHeatMapFiles(heatMapFile);
 		readHeatMapFiles(heatMapFile.replace("false", "true"));
 
 		determineOverallColour(heatMapFile);
 		determineOverallColour(heatMapFile.replace("false", "true"));
+		
+		File file = new File("data//output//notes_MHCIIPAN31" + properties.getValue("fileExtension")+ ".txt");
+		FileHelper.writeToFile(file, fullContent);
 
 	}
 }

@@ -17,16 +17,29 @@ import uk.ac.bbk.cryst.netprediction.util.FileHelper;
 import uk.ac.bbk.cryst.netprediction.util.NetPanCmd;
 import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
 import uk.ac.bbk.cryst.sequenceanalysis.model.MatchData;
+import uk.ac.bbk.cryst.sequenceanalysis.model.MatchDataClassII;
 import uk.ac.bbk.cryst.sequenceanalysis.model.Sequence;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceComparator;
 import uk.ac.bbk.cryst.sequenceanalysis.service.SequenceFactory;
 
+/* 1. Find matching 9mers
+ * 2. Run prediction on 9mers only to see if both left and right
+ * bind with enough affinity
+ *  
+ * The MHC score does not change if you run the panning sequence
+ * of the 9mer on CTLPAN or if you just run the 9mer instead
+ * that's why we only ran the matching peptides on NetCTLPan
+ * and did not consider the surrounding residues.
+ * In class II analysis we need the 15mer not core 9mer so match object will not
+ * suit our needs. We need a new match object then we can use a similar flow for class II.
+ * */
 public class PredictionBasedSequenceScanner {
 
 	PredictionType type;
 	FastaFileType inputType;
 	FastaFileType compareType;
 	int nMer;
+	int coreNMer;
 	boolean isMatch;
 	int IC50_threshold;
 	String scoreCode;
@@ -79,6 +92,14 @@ public class PredictionBasedSequenceScanner {
 
 	public void setnMer(int nMer) {
 		this.nMer = nMer;
+	}
+
+	public int getCoreNMer() {
+		return coreNMer;
+	}
+
+	public void setCoreNMer(int coreNMer) {
+		this.coreNMer = coreNMer;
 	}
 
 	public int getIC50_threshold() {
@@ -177,8 +198,9 @@ public class PredictionBasedSequenceScanner {
 		this.predictionOutputPath = predictionOutputPath;
 	}
 
-	public PredictionBasedSequenceScanner(PredictionType type, FastaFileType inputType, FastaFileType compareType, int nMer) {
+	public PredictionBasedSequenceScanner(PredictionType type, FastaFileType inputType, FastaFileType compareType,int coreNMer, int nMer) {
 		this.type = type;
+		this.coreNMer = coreNMer;
 		this.nMer = nMer;
 		this.IC50_threshold = 500;
 		this.anchorPositions = Arrays.asList(1,2,3,nMer);
@@ -258,6 +280,34 @@ public class PredictionBasedSequenceScanner {
 			e.printStackTrace();
 		}
 
+	}
+	
+	public void scanProteomeClassII() {
+		try {
+			AlleleGroupData groupData = new AlleleGroupDataDaoImpl(this.getAlleleFileFullPath()).getGroupData();
+
+			SequenceComparator sequenceComparator = new SequenceComparator();
+
+			for (String allele : groupData.getAlleleMap().keySet()) {
+				System.out.println("ALLELE:" + allele);
+				System.out.println("*******************************************");
+
+				for (Sequence seq1 : seq1List) {
+
+
+					List<MatchDataClassII> matchDataList = sequenceComparator.getMatchData(seq1, seq2List,
+							this.getAnchorPositions(), this.isMatch(), this.getCoreNMer(), this.getnMer());
+				
+					for (MatchDataClassII match : matchDataList) {
+						//scan(allele, match);
+					}
+				}
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void scan(String allele, MatchData match) {

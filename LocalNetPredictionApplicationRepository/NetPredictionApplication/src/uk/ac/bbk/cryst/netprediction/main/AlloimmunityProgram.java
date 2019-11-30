@@ -2,6 +2,7 @@ package uk.ac.bbk.cryst.netprediction.main;
 
 import java.io.IOException;
 
+import uk.ac.bbk.cryst.netprediction.service.AlloimmunityAnalyzerClassI;
 import uk.ac.bbk.cryst.netprediction.service.AlloimmunityAnalyzerClassII;
 
 public class AlloimmunityProgram {

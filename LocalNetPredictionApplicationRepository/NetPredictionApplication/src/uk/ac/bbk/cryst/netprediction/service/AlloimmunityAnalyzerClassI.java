@@ -487,14 +487,16 @@ public class AlloimmunityAnalyzerClassI {
 		String header = "Variant,Allele,Peptide_1,IC50_1,Peptide_2,IC50_2,Colour";
 		String newLine = "\n";
 
-		File file = new File(this.getNovelSurfacesFileFullPath());
+		String fileName = this.getNovelSurfacesFileFullPath().split("\\.")[0] + properties.getValue("fileExtension") + ".csv";
+		
+		File file = new File(fileName);
 		if (!file.exists()) {
-			Path path = Paths.get(this.getNovelSurfacesFileFullPath());
+			Path path = Paths.get(fileName);
 			Files.write(path, header.getBytes());
 			Files.write(path, newLine.getBytes(), StandardOpenOption.APPEND);
 		}
 
-		Path path = Paths.get(this.getNovelSurfacesFileFullPath());
+		Path path = Paths.get(fileName);
 		Files.write(path, novelEntry.toString().getBytes(), StandardOpenOption.APPEND);
 
 		LOGGER.exiting("AlloimmunityAnalyzerClassI", "writeToFinalOutputFile");
