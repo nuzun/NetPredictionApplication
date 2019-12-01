@@ -18,7 +18,7 @@ import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
  * that's why we only ran the matching peptides on NetCTLPan
  * and did not consider the surrounding residues.
  * In class II analysis we need the 15mer not core 9mer so match object will not
- * suit our needs. We need a new match object then we can use a similar flow for class II.
+ * suit our needs. We needed a new match object then we can use a similar flow for class II.
  * */
 public class PredictionBasedSequenceScannerMain {
 
@@ -29,9 +29,9 @@ public class PredictionBasedSequenceScannerMain {
 		System.setOut(out);
 		System.out.println(new Date().toString());
 		
-		PredictionBasedSequenceScanner ps = new PredictionBasedSequenceScanner(PredictionType.CTLPAN,
-				FastaFileType.UNIPROT, FastaFileType.UNIPROT,9,9);
-		ps.scanProteome();
+		PredictionBasedSequenceScanner ps = new PredictionBasedSequenceScanner(PredictionType.MHCIIPAN31,
+				FastaFileType.UNIPROT, FastaFileType.UNIPROT,9,15);
+		ps.scan();
 		
 		System.out.println(new Date().toString());
 	}

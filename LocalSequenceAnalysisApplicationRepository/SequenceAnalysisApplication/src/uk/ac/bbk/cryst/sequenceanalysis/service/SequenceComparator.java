@@ -396,6 +396,7 @@ public class SequenceComparator {
 
 	/**
 	 * This method is the usual method to generate the 9mer/coreMer match data 
+	 * position member here starts from 0.. maybe change this??? TODO
 	 */
 	public static List<MatchData> generateMatchMap(Sequence seq1, Sequence seq2, List<Integer> positions, boolean cond,
 			int peptideLength) {
@@ -431,6 +432,9 @@ public class SequenceComparator {
 	 * @param positions
 	 * @param cond
 	 * @param peptideLength
+	 * while getting the panning sequence we need to start from +1 as the panning
+	 * sequence function assumes positions start from 1 not 0.
+	 * position member here starts from 0.. maybe change this??? TODO
 	 * @return
 	 */
 	public static List<MatchDataClassII> generateMatchMapClassII(Sequence seq1, Sequence seq2, List<Integer> positions, 
@@ -449,8 +453,8 @@ public class SequenceComparator {
 
 				if (isMatch(peptide1, peptide2, positions, cond)) {
 					MatchDataClassII newMatch = new MatchDataClassII(
-							seq1.getProteinId(), pos1, peptide1,seq1.getPanningSequence(pos1, nMer),
-							seq2.getProteinId(), pos2, peptide2,seq2.getPanningSequence(pos2, nMer));
+							seq1.getProteinId(), pos1, peptide1,seq1.getPanningSequence(pos1+1, nMer),
+							seq2.getProteinId(), pos2, peptide2,seq2.getPanningSequence(pos2+1, nMer));
 					matchList.add(newMatch);
 				}
 			}

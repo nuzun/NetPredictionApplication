@@ -47,6 +47,7 @@ public class PeptideGenerator {
 		return peptides;
 	}
 	
+	/*position map starts from 0*/
 	public static  Map<Integer,String> getPositionPeptideMap(Sequence sequence, int length){
 		
 		if(length <= 0){
