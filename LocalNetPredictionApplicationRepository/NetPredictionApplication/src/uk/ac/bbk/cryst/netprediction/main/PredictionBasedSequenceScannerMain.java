@@ -2,10 +2,12 @@ package uk.ac.bbk.cryst.netprediction.main;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Date;
 
 import uk.ac.bbk.cryst.netprediction.common.PredictionType;
+import uk.ac.bbk.cryst.netprediction.common.PropertiesHelper;
 import uk.ac.bbk.cryst.netprediction.service.PredictionBasedSequenceScanner;
 import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
 
@@ -22,15 +24,18 @@ import uk.ac.bbk.cryst.sequenceanalysis.common.FastaFileType;
  * */
 public class PredictionBasedSequenceScannerMain {
 
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
+		PropertiesHelper properties = new PropertiesHelper();
+		String consoleOutputFullPath = properties.getValue("consoleOutputFileFullPath");
 
-		PrintStream out = new PrintStream(new FileOutputStream("/home/nuzun/git/LocalNetPredictionApplicationRepository/NetPredictionApplication/data/console_output.txt"));
+		//PrintStream out = new PrintStream(new FileOutputStream("/home/nuzun/git/LocalNetPredictionApplicationRepository/NetPredictionApplication/data/console_output.txt"));
+		PrintStream out = new PrintStream(new FileOutputStream(consoleOutputFullPath));
 		System.setOut(out);
 		System.out.println(new Date().toString());
 		
 		PredictionBasedSequenceScanner ps = new PredictionBasedSequenceScanner(PredictionType.MHCIIPAN31,
-				FastaFileType.UNIPROT, FastaFileType.UNIPROT,9,15);
+				FastaFileType.UNIPROT, FastaFileType.ENSEMBLPEP,9,15);
 		ps.scan();
 		
 		System.out.println(new Date().toString());

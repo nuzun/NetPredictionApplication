@@ -59,6 +59,8 @@ public class PredictionBasedSequenceScanner {
 	String predictionOutputPath;
 	List<Sequence> seq1List;
 	List<Sequence> seq2List;
+	
+	int counter =0;
 
 	public boolean isMatch() {
 		return isMatch;
@@ -205,7 +207,7 @@ public class PredictionBasedSequenceScanner {
 		this.type = type;
 		this.coreNMer = coreNMer;
 		this.nMer = nMer;
-		this.IC50_threshold = 5000;
+		this.IC50_threshold = 100;
 		this.anchorPositions = Arrays.asList(1, 4, 6, 9);
 		this.scoreCode = "0";
 		this.inputType = inputType;
@@ -302,6 +304,8 @@ public class PredictionBasedSequenceScanner {
 			for (String allele : groupData.getAlleleMap().keySet()) {
 				System.out.println("ALLELE:" + allele);
 				System.out.println("*******************************************");
+				
+			    counter = 0;
 
 				for (Sequence seq1 : seq1List) {
 
@@ -312,6 +316,9 @@ public class PredictionBasedSequenceScanner {
 						scanClassII(allele, match);
 					}
 				}
+				System.out.println("ALLELE COUNTER:" + allele + ":" + counter);
+				System.out.println("------------------------------------------");
+
 			}
 
 		} catch (IOException e) {
@@ -325,8 +332,8 @@ public class PredictionBasedSequenceScanner {
 
 		try {
 
-			System.out.println("MATCH FOUND:");
-			System.out.println(match.toString());
+			//System.out.println("MATCH FOUND:");
+			//System.out.println(match.toString());
 
 			NetPanDataBuilder builder = new NetPanDataBuilder(this.getType());
 
@@ -352,17 +359,13 @@ public class PredictionBasedSequenceScanner {
 			List<MHCIIPeptideData> peptideData1List = inputSeqNetPanData
 					.getSpecificPeptideDataByMaskedCore(match.getCorePeptide1(), this.getAnchorPositions(), isMatch());
 
-			// Optional<MHCIIPeptideData> result1 = peptideData1List.stream().
-			// filter(x -> x.getIC50Score() <=
-			// this.getIC50_threshold()).findFirst();
-
 			List<MHCIIPeptideData> result1 = peptideData1List.stream()
 					.filter(x -> x.getIC50Score() <= this.getIC50_threshold()).collect(Collectors.toList());
 
 			// if we have a good affinity then continue
 			if (result1.size() > 0) {
-				System.out.println("INPUT PEPTIDE FOUND WITH ENOUGH AFF:");
-				result1.forEach(System.out::println);
+				//System.out.println("INPUT PEPTIDE FOUND WITH ENOUGH AFF:");
+				//result1.forEach(System.out::println);
 				// Now work on the second sequence
 
 				String seq2FileFullContent = ">sp|" + match.getProteinId2() + "_" + match.getCoreStartPosition2() + "\n"
@@ -387,30 +390,35 @@ public class PredictionBasedSequenceScanner {
 				List<MHCIIPeptideData> peptideData2List = matchNetPanData.getSpecificPeptideDataByMaskedCore(
 						match.getCorePeptide1(), this.getAnchorPositions(), this.isMatch());
 
-				// Optional<MHCIIPeptideData> result2 =
-				// peptideData2List.stream().
-				// filter(x -> x.getIC50Score() <=
-				// this.getIC50_threshold()).findFirst();
+			
 				List<MHCIIPeptideData> result2 = peptideData2List.stream()
 						.filter(x -> x.getIC50Score() <= this.getIC50_threshold()).collect(Collectors.toList());
 
 				if (result2.size() > 0) {
-					System.out.println("MATCH FOUND WITH ENOUGH AFF:");
-					result2.forEach(System.out::println);
-
+					//System.out.println("INPUT PEPTIDE FOUND WITH ENOUGH AFF:");
+					//result1.forEach(System.out::println);
+					//System.out.println("MATCH FOUND WITH ENOUGH AFF:" + match.getProteinId2());
+					//result2.forEach(System.out::println);
+					//System.out.println("");
+					counter++;	
+					
+					for(MHCIIPeptideData r: result1){
+						System.out.println(match.getCoreStartPosition1() + ":" + r.getPeptide());
+					}
+					
 				} else {
-					System.out.println("MATCHING PEPTIDE:");
-					peptideData2List.forEach(System.out::println);
+					//System.out.println("MATCHING PEPTIDE:");
+					//peptideData2List.forEach(System.out::println);
 				}
 			}
 
 			else {
 
-				System.out.println("INPUT PEPTIDE:");
-				peptideData1List.forEach(System.out::println);
+				//System.out.println("INPUT PEPTIDE:");
+				//peptideData1List.forEach(System.out::println);
 			}
 
-			System.out.println("");
+			//System.out.println("");
 
 		} catch (Exception e) {
 			e.printStackTrace();

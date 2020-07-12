@@ -434,7 +434,8 @@ public class SequenceComparator {
 	 * @param peptideLength
 	 * while getting the panning sequence we need to start from +1 as the panning
 	 * sequence function assumes positions start from 1 not 0.
-	 * position member here starts from 0.. maybe change this??? TODO
+	 * position member here starts from 0.. I changed it at least to make it start from 1
+	 * for the results/output maybe change this??? TODO
 	 * @return
 	 */
 	public static List<MatchDataClassII> generateMatchMapClassII(Sequence seq1, Sequence seq2, List<Integer> positions, 

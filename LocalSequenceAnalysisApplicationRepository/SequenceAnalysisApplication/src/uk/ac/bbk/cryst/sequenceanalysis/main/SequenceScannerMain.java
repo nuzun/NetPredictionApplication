@@ -43,7 +43,7 @@ public class SequenceScannerMain {
 	 */
 	public static void main(String[] args) throws Exception {
 		inputType = FastaFileType.UNIPROT;
-		compareType = FastaFileType.ENSEMBLPEP;
+		compareType = FastaFileType.UNIPROT;
 		sequenceFileFullPath = properties.getValue("sequenceFileFullPath");
 		compareFileFullPath = properties.getValue("compareFileFullPath");
 		outputPath = properties.getValue("outputPath");

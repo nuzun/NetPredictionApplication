@@ -27,9 +27,9 @@ public class Program {
 		// parameters
 		String peptideLength = "15";
 		String scoreCode = "0"; // MHC(1) or comb (0) used for CTL only
-		PredictionType type = PredictionType.MHCII;
+		PredictionType type = PredictionType.MHCIIPAN31;
 		
-		String outputFullPath = properties.getValue("testOutputFullPathMHCII");
+		String outputFullPath = properties.getValue("tmpOutputFullPathMHCIIPan");
 		String alleleFileFullPath = properties.getValue("alleleFileFullPath");
 
 		// Read the alleles from region/group of alleles file

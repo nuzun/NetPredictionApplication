@@ -22,8 +22,8 @@ public class OutPathProcessor {
 		// ebv_P03206.fasta
 		String fileName = FilenameUtils.removeExtension(sequenceFile.getName());
 		
-		File pathToRead = new File(properties.getValue("outputPathCTLPan") + fileName + "/");
-		PredictionType type = PredictionType.CTLPAN;
+		File pathToRead = new File(properties.getValue("tmpOutputPathMHCIIPan") + fileName + "/");
+		PredictionType type = PredictionType.MHCIIPAN31;
 		NetPanDataBuilder builder = new NetPanDataBuilder(type);
 		List<NetPanData> netPanDataList = new ArrayList<>();
 
@@ -39,8 +39,9 @@ public class OutPathProcessor {
 				
 			}
 		} // for
-		printEpitopes(netPanDataList);
+		//printEpitopes(netPanDataList);
 		//printAll(netPanDataList);
+		printBelowThreshold(netPanDataList);
 	}
 
 	private static void printEpitopes(List<NetPanData> netPanDataList) {
@@ -62,5 +63,24 @@ public class OutPathProcessor {
 			}
 		}
 	}
-
+	
+	private static void printBelowThreshold(List<NetPanData> netPanDataList) {
+		int counter;
+		
+		for (NetPanData netPanData : netPanDataList) {
+			counter = 0;
+			List<PeptideData> peptideList = netPanData.getPeptideList();
+			System.out.println(netPanData.getFastaFileName() + " " + netPanData.getAllele());
+			System.out.println("*******************************************");
+			for (PeptideData peptide : peptideList) {
+				if(peptide.getIC50Score() <= 100){
+					counter ++;
+					//System.out.println(peptide.toString());
+					//System.out.println(peptide.getPeptide());
+				}
+			}
+			System.out.println("COUNTER:" + counter + "   ----------------------------");
+			System.out.println();
+		}
+	}
 }
